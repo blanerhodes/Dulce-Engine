@@ -1,0 +1,40 @@
+FEATURE TODO:
+- render a sphere then work on the skybox being an inverted sphere
+- generic mesh handling
+- all of the other primitive meshes i listed (cylinders, spheres, etc)
+- proper skybox
+- grid floor
+- object skinning??
+- convert to using a world chunk and offset system instead of absolute floats (will require big changes
+  because the renderer origin will need to move around and not be 1:1 with the world origin)
+
+THINGS TO FIX/TWEAK:
+- circular dependency between render.cpp and dx3d11.cpp
+- ciccular dependendy between camera and GameInput files
+- world coords are used for objects but the camera position is still working off of renderer coords
+
+
+
+8/31/2023:
+- basic pipeline of dealing with textures is set up but still getting a black screen
+- found an error where texture size allocation was based on number of pixels (dim*dim) and not bytes (dim*dim*4), not sure if there are more like this still
+- double check texture buffer is init'ed properly (almost done)
+- check if textures and samplers are being set via renderdoc
+- check if tex coords are right via renderdoc
+
+9/1/2023
+- fixed issues from 8/31/2023, problem was not creating the d3d resource views when loading the texture in render.cpp
+
+9/2/2023
+- set registers for viewproj matrix in shader, make sure offsets are still working in constant buffer, hook up second?? constant buffer for viewproj
+
+9/8/2023
+- working on differentiating meshes with/without textures by making alpha>1.0f mean the mesh is textured and the value above 1.0f is the blend amount
+	this requires changes in dulce.cpp, render.cpp, dulce_dx3d11.cpp, and the shaders to branch
+
+9/18/23
+- test WFConverter
+- write loader for DOF
+
+10/2/23
+- finish making asset table to read data from asset config in
