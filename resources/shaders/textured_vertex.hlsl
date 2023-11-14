@@ -28,6 +28,7 @@ struct VertOut {
 
 
 VertOut main(VertIn input) {
+    //process UI stuff if NOR is all 0s
     float4x4 mvp = mul(proj_view, model_transform);
     VertOut output;
     output.frag_pos = (float3) mul(model_transform, float4(input.position, 1.0f));

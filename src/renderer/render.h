@@ -1,6 +1,5 @@
 #pragma once
 #include "texture.h"
-#include "asset.h"
 
 #define COLOR_RED	   {1.0f, 0.0f, 0.0f}
 #define COLOR_GREEN	   {0.0f, 1.0f, 0.0f}
@@ -54,11 +53,10 @@ struct Vertex {
 	Vec4 color;
 	Vec2 tex_coord;
 	Vec3 normal;
-
 };
 #pragma pack(pop)
 
-bool operator==(Vertex& lhs, Vertex& rhs) {
+bool operator==(const Vertex& lhs, const Vertex& rhs) {
 	bool result = (lhs.position == rhs.position) && 
 		          (lhs.normal == rhs.normal) && 
 		          (lhs.color == rhs.color) && 
@@ -68,6 +66,29 @@ bool operator==(Vertex& lhs, Vertex& rhs) {
 
 struct Index {
 	u16 value;
+};
+
+struct AssetID {
+	u8 name[32];
+};
+
+struct AssetLookup {
+	u8 name[32];
+	u8 filepath[64];
+};
+
+struct AssetData {
+	AssetID id;
+	u32 vertex_count;
+	Vertex* vertices;
+	u32 index_count;
+	Index* indices;
+	u32 ref_count;
+};
+
+struct AssetHashMap {
+	AssetData* slots;
+	u32 num_slots;
 };
 
 //TODO: not sure if i need to pass the transform anymore since i have the constant buffer setup now
@@ -146,9 +167,13 @@ struct RendererState {
 	MemoryArena scratch_storage;
 	TextureIdSrcPair texture_ids[32];
 
-	AssetID* assets_table;
+	u32 asset_count;
+	//TODO: this probably needs to be a hashmap too
+	AssetLookup* assets_table;
 	AssetHashMap loaded_assets;
 };
+
+
 
 struct BasicMesh {
 	Vec3 position;
@@ -157,6 +182,7 @@ struct BasicMesh {
 	Vec4 color;
 	i32 texture_id;
 	AssetID asset_id;
+
 };
 
 //TODO: have parameter on lights to say how far their light will reach

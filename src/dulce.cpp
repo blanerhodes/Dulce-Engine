@@ -3,6 +3,17 @@
 #include "random.h"
 #include "dinstrinsics.h"
 
+static char* GameControllerKeyIndexToString(GameControllerKeys key) {
+    char* result = game_controller_key_strings[key];
+    return result;
+}
+
+inline GameControllerInput* GetController(GameInput* input, u32 controller_index) {
+    DASSERT(controller_index < ArrayCount(input->controllers));
+    
+    GameControllerInput* result = &input->controllers[controller_index];
+    return result;
+}
 
 static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* game_memory, RendererMemory* renderer_memory, GameFrameBuffer* buffer, GameInput* input) {
 
@@ -13,14 +24,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     if (!game_memory->is_initialized) {
         //TODO: init game transient storage at some point??
         InitializeArena(&game_state->world_arena, game_memory->permanent_storage_size - sizeof(GameState), (u8*)game_memory->permanent_storage + sizeof(GameState));
-        //TODO: this is temporary while i get around to making dof file gen happen as part of the build
-        //char* sphere_dof_path = "../../../assets/Sphere.dof";
-        //char* sphere_obj_path = "../../../objects/Sphere.obj";
-        //if (!PlatformFileExists(sphere_dof_path)){
-        //    WFObjToDof(sphere_obj_path, sphere_dof_path);
-        //}
-        //StringCopy((u8*)sphere_dof_path, (u8*)renderer_data->assets[AssetID_Sphere].filename);
-
+       
         game_state->t_sin = 0.0f;
         game_state->camera = MakeCamera(CAMERA_DEFAULT_POSITION, CAMERA_DEFAULT_WORLD_UP, CAMERA_DEFAULT_YAW, CAMERA_DEFAULT_PITCH);
         game_memory->is_initialized = true;
@@ -36,13 +40,14 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         u32 index_buffer_size = MegaBytes(2) + sizeof(RendererIndexBuffer); 
         u32 vertex_constant_buffer_size = MAX_UNIFORM_BUFFER_SLOTS * UNIFORM_BUFFER_SLOT_SIZE + sizeof(RendererConstantBuffer);
         u32 texture_buffer_size = sizeof(RendererTextureBuffer) + MAX_TEXTURE_SLOTS * TEXTURE_DIM_512 * TEXTURE_DIM_512 * sizeof(u32); //this is about 4MB
-        u32 asset
+        u32 asset_buffer_size = KiloBytes(1);
 
         RendererInitCommandBuffer(renderer_state, command_buffer_size);
         RendererInitVertexBuffer(renderer_state, vertex_buffer_size);
         RendererInitIndexBuffer(renderer_state, index_buffer_size);
         RendererInitConstantBuffer(renderer_state);
         RendererInitTextureBuffer(renderer_state, TEXTURE_DIM_512);
+        RendererInitAssets(renderer_state, 16);
         D3DInitSubresources(renderer_state);
 
         renderer_memory->is_initialized = true;
@@ -72,6 +77,46 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     if (input->controllers[0].right_alternate.ended_down) {
         point_light_pos.y += 0.1;
     }
+
+    BasicMesh cube = {
+        .position = {0.0f, 2.0f, 2.0f},
+        .scale = {1.0f, 1.0f, 1.0f},
+        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .color = COLOR_REDA,
+        .texture_id = TexID_NoTexture
+    };
+    RendererPushCube(renderer_state, cube);
+
+    BasicMesh cube2 = {
+        .position = {0.0f, 2.0f, 5.0f},
+        .scale = {1, 1, 1},
+        .color = COLOR_WHITEA,
+        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .texture_id = TexID_NoTexture,
+        .asset_id.name = "cube"
+    };
+    RendererPushAsset(renderer_state, cube2);
+
+    BasicMesh sphere = {
+        .position = {4.0f, 2.0f, 4.0f},
+        .scale = {1, 1, 1},
+        .color = COLOR_WHITEA,
+        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .texture_id = TexID_NoTexture,
+        .asset_id.name = "sphere"
+    };
+    RendererPushAsset(renderer_state, sphere);
+
+    BasicMesh suzanne = {
+        .position = {-3.0f, 2.0f, 4.0f},
+        .scale = {1, 1, 1},
+        .color = COLOR_WHITEA,
+        .texture_id = TexID_NoTexture,
+        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .asset_id.name = "suzanne"
+    };
+    RendererPushAsset(renderer_state, suzanne);
+
     PointLight point_light = {
         //.position = {game_state->t_sin, 0, game_state->t_sin},
         //.position = {adjusted_mouse_x, mouse_scroll, -adjusted_mouse_y},
@@ -89,16 +134,6 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .texture_id = TexID_NoTexture
     };
     RendererPushPlane(renderer_state, light_plane);
-
-    BasicMesh cube = {
-        .position = {0.0f, 2.0f, 2.0f},
-        .scale = {1.0f, 1.0f, 1.0f},
-        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
-        //.rotation_angles = {},
-        .color = COLOR_REDA,
-        .texture_id = TexID_NoTexture
-    };
-    RendererPushCube(renderer_state, cube);
 
     BasicMesh pyramid = {
         .position = {2.0f, 2.0f, 2.0f},
@@ -147,6 +182,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .texture_id = TexID_Sky
     };
     RendererPushPlane(renderer_state, sky_plane);
+
+
 
     //static u32 frame_count = 0;
     //if (frame_count % 10 == 0) {

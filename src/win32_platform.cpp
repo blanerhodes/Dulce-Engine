@@ -25,6 +25,7 @@ static Direct3d g_d3d;
 #include "renderer/render.cpp"
 #include "renderer/d3d11/dulce_dx3d11.cpp"
 #include "dulce.cpp"
+#include "renderer/font_atlas_maker.cpp"
 
 
 static GameInput input[2] = {};
@@ -43,7 +44,8 @@ static f32 GetSecondsElapsed(LARGE_INTEGER start, LARGE_INTEGER end) {
 
 static b32 PlatformFileExists(char* filename) {
     DWORD attrib = GetFileAttributesA(filename);
-    return (attrib != INVALID_FILE_ATTRIBUTES && !(attrib & FILE_ATTRIBUTE_DIRECTORY));
+    b32 result = (attrib != INVALID_FILE_ATTRIBUTES && !(attrib & FILE_ATTRIBUTE_DIRECTORY));
+    return result;
 }
 
 static DebugReadFileResult DebugPlatformReadEntireFile(ThreadContext* thread, char* filename) {
@@ -392,6 +394,30 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
     //GameInput input[2] = {};
     //GameInput* new_input = &input[0];
     //GameInput* old_input = &input[1];
+
+ //TODO: this is temporary while i get around to making dof file gen happen as part of the build
+    char* sphere_dof_path = "./resources/assets/sphere.dof";
+    char* sphere_obj_path = "./resources/objects/sphere.obj";
+    if (!PlatformFileExists(sphere_dof_path)){
+        WFObjToDof(sphere_obj_path, sphere_dof_path);
+    }
+    char* cube_dof_path = "./resources/assets/cube.dof";
+    char* cube_obj_path = "./resources/objects/cube.obj";
+    if (!PlatformFileExists(cube_dof_path)){
+        WFObjToDof(cube_obj_path, cube_dof_path);
+    }
+
+    char* suzanne_dof_path = "./resources/assets/suzanne.dof";
+    char* suzanne_obj_path = "./resources/objects/suzanne.obj";
+    if (!PlatformFileExists(suzanne_dof_path)){
+        WFObjToDof(suzanne_obj_path, suzanne_dof_path);
+    }
+
+    char* font_ttf_path = "./resources/assets/cour.ttf";
+    char* font_png_path = "./resources/assets/cour.png";
+    if (!PlatformFileExists(font_png_path)) {
+        BuildFontAtlas(font_ttf_path, font_png_path);
+    }
 
     LARGE_INTEGER last_counter = GetWallClock();
     LARGE_INTEGER flip_wall_clock = GetWallClock();

@@ -38,3 +38,7 @@ THINGS TO FIX/TWEAK:
 
 10/2/23
 - finish making asset table to read data from asset config in
+
+10/20/23 TODO L145 wfobj_loader.h
+
+10/25/23 get stb truetype working, 2D UI shader, Rendering pipe for textk

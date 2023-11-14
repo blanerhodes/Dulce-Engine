@@ -18,6 +18,9 @@
     <ClCompile Include="src\win32_platform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\font_atlas_maker2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\textured_pixel.hlsl" />
@@ -41,9 +44,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\asset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

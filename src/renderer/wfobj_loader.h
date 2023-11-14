@@ -9,6 +9,16 @@
 
 //TODO: some way to reorder the indices so accessing them is more gpu vertex cache friendly
 
+struct VertexHashFunction {
+	size_t operator()(const Vertex& v) const {
+		size_t pos_hash = std::hash<float>()(v.position.x);
+		size_t color_hash = std::hash<float>()(v.color.y);
+		size_t tex_hash = std::hash<float>()(v.tex_coord.x);
+		size_t norm_hash = std::hash<float>()(v.normal.z);
+		return pos_hash ^ color_hash ^ tex_hash ^ norm_hash;
+	}
+};
+
 Vec3 WFGetTriplets(std::istringstream& stream) {
 	Vec3 triplets = {};
 	stream >> triplets.x >> triplets.y >> triplets.z;
@@ -16,12 +26,14 @@ Vec3 WFGetTriplets(std::istringstream& stream) {
 }
 
 Vec3 WFGetIndices(std::istringstream& stream) {
-	Vec3 triplets = WFGetTriplets(stream);
+	Vec3 triplets = {};
+	char dump;
+	stream >> triplets.x >> dump >> triplets.y >> dump >> triplets.z;
 	return {triplets.x-1, triplets.y-1, triplets.z-1};
 }
 
-void WFProcessVertex(Vertex vertex, std::unordered_map<Vertex, u32>& unique_verts, 
-	                 std::vector<Vertex>& vertices, std::vector<Index>indices, u32* index_counter) {
+void WFProcessVertex(Vertex vertex, std::unordered_map<Vertex, u32, VertexHashFunction>& unique_verts, 
+	                 std::vector<Vertex>& vertices, std::vector<Index>& indices, u32* index_counter) {
 		auto vert_loc = unique_verts.find(vertex);
 		if (vert_loc == unique_verts.end()) {
 			std::pair<Vertex, u32> pair = {vertex, *index_counter};
@@ -30,13 +42,13 @@ void WFProcessVertex(Vertex vertex, std::unordered_map<Vertex, u32>& unique_vert
 			u16 counter16 = (u16)(*index_counter);
 			Index temp = {counter16};
 			indices.push_back(temp);
+			*index_counter += 1;
 		}
 		else {
 			Index temp;
 			temp.value = vert_loc->second;
 			indices.push_back(temp);
 		}
-		*(index_counter)++;
 }
 
 //NOTE: wavefront obj to dulce object file
@@ -47,8 +59,8 @@ void WFObjToDof(char* in_file, char* out_file) {
 	std::vector<Vec3> normals;
 	std::vector<Vec2> tex_coords;
 
-	std::ifstream file(in_file);
-	std::istringstream stream(buffer);
+	std::ifstream file(in_file, std::ios::binary);
+	DASSERT(file.is_open());
 	u32 skip_lines = 4;
 	for (u32 i = 0; i < skip_lines; i++) {
 		std::getline(file, buffer);
@@ -56,8 +68,9 @@ void WFObjToDof(char* in_file, char* out_file) {
 	
 	//NOTE: fill pos/norm/tex arrays with raw data
 	while (std::getline(file, buffer)) {
-		stream.str(buffer);
+		std::istringstream stream(buffer);
 		std::string indicator;
+		stream.str(buffer);
 		stream >> indicator;
 		
 		if (indicator == "v") {
@@ -76,12 +89,12 @@ void WFObjToDof(char* in_file, char* out_file) {
 		}
 	}
 
-
-	std::unordered_map<Vertex, u32> unique_verts;
+	std::unordered_map<Vertex, u32, VertexHashFunction> unique_verts;
 	std::vector<Vertex> vertices;
 	std::vector<Index> indices;
 	u32 index_counter = 0;
 	do {
+		std::istringstream stream(buffer);
 		stream.str(buffer);
 		char dump;
 		stream >> dump;
@@ -116,8 +129,10 @@ void WFObjToDof(char* in_file, char* out_file) {
 	} while (std::getline(file, buffer));
 
 	std::ofstream dof(out_file, std::ios::binary);
-	dof.write((char*)vertices.size(), sizeof(u32));
-	dof.write((char*)indices.size(), sizeof(u32));
+	u32 vert_count = vertices.size();
+	u32 index_count = indices.size();
+	dof.write((char*)&vert_count, sizeof(u32));
+	dof.write((char*)&index_count, sizeof(u32));
 	for (u32 i = 0; i < vertices.size(); i++) {
 		dof.write((char*)&vertices[i], sizeof(vertices[0]));
 	}
@@ -127,8 +142,9 @@ void WFObjToDof(char* in_file, char* out_file) {
 	dof.close();
 }
 
- void LoadDOF(MemoryArena* arena, AssetData* asset, char* filename) {
-	DebugReadFileResult read_result = DebugPlatformReadEntireFile(0, filename);
+//TODO: figure out why loading isnt working i think its a problem with vertices being read in or need to change up/forward in blender
+ void LoadDOF(MemoryArena* arena, AssetData* asset, u8* filename) {
+	DebugReadFileResult read_result = DebugPlatformReadEntireFile(0, (char*)filename);
 	u32 vert_count = 0;
 	u32 index_count = 0;
 	u32* counts = (u32*)read_result.contents;
@@ -137,10 +153,14 @@ void WFObjToDof(char* in_file, char* out_file) {
 	index_count = *counts;
 	counts++;
 
+	asset->vertex_count = vert_count;
+	asset->index_count = index_count;
+
 	asset->vertices = PushArray(arena, vert_count, Vertex);
 	Vertex* read_vertices = (Vertex*)counts;
 	Vertex* write_vertices = asset->vertices;
 	MemCopy(read_vertices, write_vertices, vert_count*sizeof(Vertex));
+	read_vertices = read_vertices + vert_count;
 
 	asset->indices = PushArray(arena, index_count, Index);
 	Index* read_indices = (Index*)read_vertices;
@@ -149,22 +169,6 @@ void WFObjToDof(char* in_file, char* out_file) {
 
 	DebugPlatformFreeFileMemory(0, read_result.contents);
 }
-
- void LoadAssetConfig(RendererState* renderer) {
-	 char* filename = "../../resources/assets/assets.ini";
-	 DebugReadFileResult read_result = DebugPlatformReadEntireFile(0, filename);
-	 renderer->assets_table = (AssetID*)PushSize(&renderer->permanent_storage, 0);
-	 u8* file_ptr = (u8*)read_result.contents;
-	 u32 num_copied = 0;
-	 AssetID curr = {};
-	 while (num_copied = StringCopyToWS(file_ptr, curr.name, true)) {
-		file_ptr += num_copied;
-		num_copied = StringCopyToWS(file_ptr, curr.filepath, true);
-		file_ptr += num_copied;
-		AssetID* next_id = PushStruct(&renderer->permanent_storage, AssetID);
-		MemCopy(&curr, next_id, sizeof(AssetID));
-	 }
- }
 
 
 //NOTE: .dof format everything is tightly packed

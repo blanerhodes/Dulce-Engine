@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\font_atlas_maker2.cpp" />
     <ClCompile Include="src\win32_platform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -176,7 +177,6 @@
   <ItemGroup>
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\game_input.h" />
-    <ClInclude Include="src\renderer\asset.h" />
     <ClInclude Include="src\renderer\render.h" />
     <ClInclude Include="src\renderer\renderer_shape_gen.h" />
     <ClInclude Include="src\renderer\texture.h" />

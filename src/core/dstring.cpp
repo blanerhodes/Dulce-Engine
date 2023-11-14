@@ -10,7 +10,7 @@ u32 StringLength(char* str) {
     return result;
 }
 
-static b8 StringsEqual(char* str1, char* str2) {
+static b8 StringsEqual(u8* str1, u8* str2) {
     if (!str1 || !str2) {
         DERROR("StringsEqual - Null string passed.");
         return false;
@@ -55,14 +55,17 @@ inline b32 IsWhiteSpace(char c) {
 
 inline u32 StringCopyToWS(u8* src, u8* dest, b32 include_ws = false) {
     u32 num_copied = 0;
-    while(src && dest && !IsWhiteSpace(*src)) {
-        *src = *dest;
+    while(*src && dest && !IsWhiteSpace(*src)) {
+        *dest = *src;
         src++;
         dest++;
         num_copied++;
     }
     if (include_ws) {
-        num_copied++;
+        while (*src && IsWhiteSpace(*src)) {
+            src++;
+            num_copied++;
+        }
     }
     return num_copied;
 }

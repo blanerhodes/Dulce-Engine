@@ -246,6 +246,7 @@ void RendererResetTextureBuffer(RendererTextureBuffer* texture_buffer) {
 	//go through and zero out all the memory for each texture??
 }
 
+
 //TODO: instead of a switch have a system of looking up in a table of texture ids and their source to retrieve them
 //      if they arent present in the buffer
 // return struct of texturebuffer/index when this uses 128/512... etc buffers
@@ -506,12 +507,15 @@ void RendererPushCylinder(RendererState* renderer, BasicMesh cyl) {
 
 }
 
-void RendererPushAsset(RendererState* renderer, BasicMesh mesh) {
-	AssetData asset = renderer->assets[mesh.asset_id];
-	if (!asset.vertices) {
-		//LoadDOF(&renderer->storage, &asset);
+u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
+	for (u32 i = 0; i < renderer->asset_count; i++) {
+		if (StringsEqual(renderer->assets_table[i].name, id.name)) {
+			return renderer->assets_table[i].filepath;
+		}
 	}
+	return 0;
 }
+
 
 //NOTE: this is hardcoding a point light to be in slot 0 of the constant buffer
 void RendererPushPointLight(RendererState* renderer, PointLight light) {
@@ -566,7 +570,7 @@ u32 BinarySearch(u32 arr[], u32 size, u32 target) {
 			left = mid + 1;
 		}
 	}
-	return boundary;
+	return arr[boundary];
 }
 
 u32 primes[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 
@@ -580,8 +584,8 @@ void InitAssetHashMap(MemoryArena* arena, AssetHashMap* hashmap, u32 num_slots) 
 
 u32 AssetIDHash(AssetID id, u32 map_size) {
 	u32 hash = 0;
-	char* name = id.name;
-	for (u32 i = 0; name; i++, name++) {
+	u8* name = id.name;
+	for (u32 i = 0; *name; i++, name++) {
 		hash += *name * primes[i];
 	}
 	return hash % map_size;
@@ -597,29 +601,83 @@ AssetData* AssetHashMapGet(AssetHashMap* hashmap, AssetID id){
 		if (!hashmap->slots[ind_hash].vertices) {
 			break;
 		}
-		if (StringsEqual(hashmap->slots[ind_hash].name, id.name)) {
+		if (StringsEqual(hashmap->slots[ind_hash].id.name, id.name)) {
 			return &hashmap->slots[ind_hash];
 		}
 	}
 	return 0;
 }
 
-AssetData* AssetHashMapGet(AssetHashMap* hashmap, char* name) {
-	AssetID id = {};
-	StringCopy((u8*)name, (u8*)id.name);
-	return AssetHashMapGet(hashmap, id);
-}
-
-void AssetHashMapInsert(AssetHashMap* hashmap, AssetData asset) {
-	AssetID id = {};
-	StringCopy((u8*)asset.name, (u8*)id.name);
-	u32 hash = AssetIDHash(id, hashmap->num_slots);
+AssetData* AssetHashMapInsert(AssetHashMap* hashmap, AssetData asset) {
+	u32 hash = AssetIDHash(asset.id, hashmap->num_slots);
 	for (u32 index = 0; index < hashmap->num_slots; index++) {
 		u32 ind_hash = (index + hash) % hashmap->num_slots;
 		if (!hashmap->slots[ind_hash].vertices) {
 			AssetData* empty_slot = &hashmap->slots[ind_hash];
 			MemCopy(&asset, empty_slot, sizeof(AssetData));
-			return;
+			return empty_slot;
 		}
 	}
+	return 0;
+}
+
+void LoadAssetConfig(RendererState* renderer) {
+    char* filename = "./resources/assets/assets.ini";
+    DebugReadFileResult read_result = DebugPlatformReadEntireFile(0, filename);
+    renderer->assets_table = (AssetLookup*)PushSize(&renderer->permanent_storage, 0);
+    renderer->asset_count = 0;
+    u8* file_ptr = (u8*)read_result.contents;
+    u32 num_copied = 0;
+//TODO: figure out why the string copy isnt working
+    while (num_copied < read_result.contents_size) {
+		AssetLookup curr = {};
+		num_copied += StringCopyToWS(file_ptr+num_copied, curr.name, true);
+   		num_copied += StringCopyToWS(file_ptr+num_copied, curr.filepath, true);
+   		AssetLookup* next_id = PushStruct(&renderer->permanent_storage, AssetLookup);
+   		MemCopy(&curr, next_id, sizeof(AssetLookup));
+   		renderer->asset_count++;
+    }
+}
+
+void RendererInitAssets(RendererState* state, u32 num_slots) {
+	LoadAssetConfig(state);
+	InitAssetHashMap(&state->permanent_storage, &state->loaded_assets, num_slots);
+}
+
+void RendererPushAsset(RendererState* renderer, BasicMesh mesh) {
+	AssetData* asset = AssetHashMapGet(&renderer->loaded_assets, mesh.asset_id);
+	if (!asset) {
+		AssetData new_asset = {.id = mesh.asset_id};
+		LoadDOF(&renderer->permanent_storage, &new_asset, RendererLookupAsset(renderer, mesh.asset_id));
+		asset = AssetHashMapInsert(&renderer->loaded_assets, new_asset);
+	}
+
+	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
+	RendererIndexBuffer* index_buffer = renderer->index_buffer;
+	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+
+	RendererCommitVertexMemory(vertex_buffer, asset->vertices, asset->vertex_count);
+	RendererCommitIndexMemory(index_buffer, asset->indices, asset->index_count);
+
+	Mat4 transform = RendererGenBasicMeshTransform(mesh);
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
+
+	if (mesh.texture_id != TexID_NoTexture) {
+		RendererLoadTexture(renderer, mesh.texture_id);
+	}
+
+	RenderCommand command = {
+		.vertex_count = asset->vertex_count,
+		.vertex_buffer_offset = vertex_buffer->vertex_count - asset->vertex_count,
+		.index_count = asset->index_count,
+		.index_buffer_offset = index_buffer->index_count - asset->index_count,
+		.vertex_constant_buffer_offset = const_buff_offset,
+		.topology = RenderTopology_TriangleList,
+		.texture_id = mesh.texture_id,
+	};
+	PushRenderCommand(renderer->command_buffer, command);
+}
+
+void RendererPushProfilingUI(RendererState* renderer, ThreadContext* thread) {
+//0 const buffer offset
 }
