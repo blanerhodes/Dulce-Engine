@@ -134,11 +134,11 @@ static D3D11_PRIMITIVE_TOPOLOGY D3DGetTopology(RenderTopology topology) {
 
 static void D3DInitSubresources(RendererState* renderer) {
     D3D11_BUFFER_DESC buffer_desc = {
-        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .ByteWidth = renderer->vertex_buffer->max_memory_size,
         .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
         .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
         .MiscFlags = 0,
-        .ByteWidth = renderer->vertex_buffer->max_memory_size,
         .StructureByteStride = sizeof(Vertex)
     };
     D3D11_SUBRESOURCE_DATA sub_rec_data = {};
@@ -149,11 +149,11 @@ static void D3DInitSubresources(RendererState* renderer) {
     g_d3d.context->IASetVertexBuffers(0, 1, &g_d3d.vertex_buffer, &stride, &offset);
 
     D3D11_BUFFER_DESC ibd = {
-        .BindFlags = D3D11_BIND_INDEX_BUFFER,
+        .ByteWidth = renderer->index_buffer->max_memory_size,
         .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_INDEX_BUFFER,
         .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
         .MiscFlags = 0,
-        .ByteWidth = renderer->index_buffer->max_memory_size,
         .StructureByteStride = sizeof(Index)
     };
     D3D11_SUBRESOURCE_DATA isd = {};
@@ -164,7 +164,7 @@ static void D3DInitSubresources(RendererState* renderer) {
     //TODO: probably going to need an array of shaders to choose from and those D3D specific shaders will be wrapped in a 
     //      renderer agnostic shader struct that will pick the right thing based on the renderer. Same with input layout
     ID3DBlob* tex_pixel_blob;
-    D3DReadFileToBlob(L"textured_pixel.cso", &tex_pixel_blob);
+    D3DReadFileToBlob(L"./shaders/textured_pixel.cso", &tex_pixel_blob);
     g_d3d.device->CreatePixelShader(tex_pixel_blob->GetBufferPointer(),
                                     tex_pixel_blob->GetBufferSize(),
                                     0,
@@ -172,7 +172,7 @@ static void D3DInitSubresources(RendererState* renderer) {
 
     ID3DBlob* untex_pixel_blob;
     ID3D11PixelShader* untex_pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Untextured];
-    D3DReadFileToBlob(L"untextured_pixel.cso", &untex_pixel_blob);
+    D3DReadFileToBlob(L"./shaders/untextured_pixel.cso", &untex_pixel_blob);
     g_d3d.device->CreatePixelShader(untex_pixel_blob->GetBufferPointer(),
                                     untex_pixel_blob->GetBufferSize(),
                                     0,
@@ -180,17 +180,17 @@ static void D3DInitSubresources(RendererState* renderer) {
 
     ID3DBlob* vert_blob;
     ID3D11VertexShader* vertex_shader = g_d3d.vertex_shader;
-    D3DReadFileToBlob(L"textured_vertex.cso", &vert_blob);
+    D3DReadFileToBlob(L"./shaders/textured_vertex.cso", &vert_blob);
     g_d3d.device->CreateVertexShader(vert_blob->GetBufferPointer(), vert_blob->GetBufferSize(), 0, &vertex_shader);
     g_d3d.context->VSSetShader(vertex_shader, 0, 0);
 
     RendererConstantBuffer* const_buffer = renderer->vertex_constant_buffer;
     D3D11_BUFFER_DESC proj_view_buffer_desc = {
-        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .ByteWidth = const_buffer->slot_size * const_buffer->num_per_frame_slots,
         .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
         .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
         .MiscFlags = 0,
-        .ByteWidth = const_buffer->slot_size * const_buffer->num_per_frame_slots,
         .StructureByteStride = 0
     };
     D3D11_SUBRESOURCE_DATA proj_view_sub_data = {};
@@ -198,11 +198,11 @@ static void D3DInitSubresources(RendererState* renderer) {
     g_d3d.device->CreateBuffer(&proj_view_buffer_desc, &proj_view_sub_data, &g_d3d.proj_view_buffer);
 
     D3D11_BUFFER_DESC const_buffer_desc = {
-        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .ByteWidth = const_buffer->max_slots * const_buffer->slot_size - proj_view_buffer_desc.ByteWidth,
         .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
         .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
         .MiscFlags = 0,
-        .ByteWidth = const_buffer->max_slots * const_buffer->slot_size - proj_view_buffer_desc.ByteWidth,
         .StructureByteStride = 0
     };
     D3D11_SUBRESOURCE_DATA const_sub_data = {};
@@ -228,8 +228,10 @@ static void D3DCreateTextureResource(Texture* texture, u32 dimension) {
         .MipLevels = 1,
         .ArraySize = 1,
         .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
-        .SampleDesc.Count = 1,
-        .SampleDesc.Quality = 0,
+        .SampleDesc = {
+            .Count = 1,
+            .Quality = 0,
+        },
         .Usage = D3D11_USAGE_DEFAULT,
         .BindFlags = D3D11_BIND_SHADER_RESOURCE,
         .CPUAccessFlags = 0,
@@ -244,8 +246,10 @@ static void D3DCreateTextureResource(Texture* texture, u32 dimension) {
     D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = {
         .Format = tex_desc.Format,
         .ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D,
-        .Texture2D.MostDetailedMip = 0,
-        .Texture2D.MipLevels = 1
+        .Texture2D = {
+            .MostDetailedMip = 0,
+            .MipLevels = 1
+        }
     };
     g_d3d.device->CreateShaderResourceView(g_d3d.textures_2d[g_d3d.next_free_tex_slot].texture, &srv_desc, &g_d3d.textures_2d[g_d3d.next_free_tex_slot].shader_view);
     g_d3d.next_free_tex_slot++;

@@ -172,17 +172,12 @@ u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32
 		buffer->slot_space_used[slot] += size;
 		if (slot > buffer->num_per_frame_slots) {
 			buffer->per_object_slots_used++;
-		}
-		else {
-			buffer->per_frame_slots_used;
-		}
-	}
-	else {
+		} 
+	} else {
 		if (size == 0) {
 			MemCopy(data, buffer->slot_addresses[slot], buffer->slot_size);
 			buffer->slot_space_used[slot] = buffer->slot_size;
-		}
-		else {
+		} else {
 			DASSERT(size <= buffer->slot_size - buffer->slot_space_used[slot]);
 			u8* write_pos = buffer->slot_addresses[slot] + buffer->slot_space_used[slot];
 			MemCopy(data, write_pos, size);
@@ -513,7 +508,7 @@ u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
 			return renderer->assets_table[i].filepath;
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 
@@ -622,7 +617,7 @@ AssetData* AssetHashMapInsert(AssetHashMap* hashmap, AssetData asset) {
 }
 
 void LoadAssetConfig(RendererState* renderer) {
-    char* filename = "./resources/assets/assets.ini";
+    char* filename = "../../resources/assets/assets.ini";
     DebugReadFileResult read_result = DebugPlatformReadEntireFile(0, filename);
     renderer->assets_table = (AssetLookup*)PushSize(&renderer->permanent_storage, 0);
     renderer->asset_count = 0;

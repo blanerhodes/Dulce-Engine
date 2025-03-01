@@ -93,13 +93,13 @@ struct AssetHashMap {
 
 //TODO: not sure if i need to pass the transform anymore since i have the constant buffer setup now
 struct RenderCommand {
-	u32 vertex_buffer_offset;
 	u32 vertex_count;
-	u32 index_buffer_offset;
+	u32 vertex_buffer_offset;
 	u32 index_count;
+	u32 index_buffer_offset;
 	u32 vertex_constant_buffer_offset;
-	i32 texture_id;
 	RenderTopology topology;
+	i32 texture_id;
 };
 
 struct RendererCommandBuffer {

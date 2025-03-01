@@ -56,10 +56,10 @@ DINLINE Mat4 CameraGetViewMatrix(Camera* camera) {
 Camera MakeCamera(Vec3 pos, Vec3 world_up, f32 yaw, f32 pitch) {
 	Camera result = {
 		.position = pos,
-		.world_up = world_up,
-		.yaw = yaw,
-		.pitch = pitch,
 		.front = {0, 0, -1},
+		.world_up = world_up,
+		.pitch = pitch,
+		.yaw = yaw,
 		.speed = CAMERA_DEFAULT_SPEED,
 		.rotation_speed = CAMERA_DEFAULT_ROTATION_SPEED,
 		.zoom = CAMERA_DEFAULT_ZOOM

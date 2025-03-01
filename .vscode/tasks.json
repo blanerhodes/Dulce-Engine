@@ -1,0 +1,70 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build Debug",
+            "windows": {
+                "command": "${workspaceFolder}/build-debug.bat",
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build Release",
+            "windows": {
+                "command": "${workspaceFolder}/build-release.bat",
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "Build Debug and Release",
+            "windows": {
+                "command": "${workspaceFolder}/build-both.bat",
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "Post-Build",
+            "windows": {
+                "command": "${workspaceFolder}/post-build.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "Start Debugger",
+            "command": "C:/dev/remedybg/remedybg.exe -g ddx12.rdbg",
+            "group": {
+                "kind": "run",
+                "isDefault": true
+            }
+        }
+    ],
+    "version": "2.0.0"
+}

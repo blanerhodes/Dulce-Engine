@@ -90,30 +90,30 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     BasicMesh cube2 = {
         .position = {0.0f, 2.0f, 5.0f},
         .scale = {1, 1, 1},
-        .color = COLOR_WHITEA,
         .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .color = COLOR_WHITEA,
         .texture_id = TexID_NoTexture,
-        .asset_id.name = "cube"
+        .asset_id = {.name = "cube"}
     };
     RendererPushAsset(renderer_state, cube2);
 
     BasicMesh sphere = {
         .position = {4.0f, 2.0f, 4.0f},
         .scale = {1, 1, 1},
-        .color = COLOR_WHITEA,
         .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .color = COLOR_WHITEA,
         .texture_id = TexID_NoTexture,
-        .asset_id.name = "sphere"
+        .asset_id = {.name = "sphere"}
     };
     RendererPushAsset(renderer_state, sphere);
 
     BasicMesh suzanne = {
         .position = {-3.0f, 2.0f, 4.0f},
         .scale = {1, 1, 1},
+        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
         .color = COLOR_WHITEA,
         .texture_id = TexID_NoTexture,
-        .rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
-        .asset_id.name = "suzanne"
+        .asset_id = {.name = "suzanne"}
     };
     RendererPushAsset(renderer_state, suzanne);
 

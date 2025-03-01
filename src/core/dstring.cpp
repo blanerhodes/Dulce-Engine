@@ -1,5 +1,14 @@
+struct StringHeader {
+    u8 size;
+    u8 length;
+    //allocator??
+};
 
-u32 StringLength(char* str) {
+struct String {
+    char* cstr; 
+};
+
+u32 StringLength(u8* str) {
     u32 result = 0;
 
     while (*str) {

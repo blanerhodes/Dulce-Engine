@@ -396,25 +396,25 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
     //GameInput* old_input = &input[1];
 
  //TODO: this is temporary while i get around to making dof file gen happen as part of the build
-    char* sphere_dof_path = "./resources/assets/sphere.dof";
-    char* sphere_obj_path = "./resources/objects/sphere.obj";
+    char* sphere_dof_path = "../../resources/assets/sphere.dof";
+    char* sphere_obj_path = "../../resources/objects/sphere.obj";
     if (!PlatformFileExists(sphere_dof_path)){
         WFObjToDof(sphere_obj_path, sphere_dof_path);
     }
-    char* cube_dof_path = "./resources/assets/cube.dof";
-    char* cube_obj_path = "./resources/objects/cube.obj";
+    char* cube_dof_path = "../../resources/assets/cube.dof";
+    char* cube_obj_path = "../../resources/objects/cube.obj";
     if (!PlatformFileExists(cube_dof_path)){
         WFObjToDof(cube_obj_path, cube_dof_path);
     }
 
-    char* suzanne_dof_path = "./resources/assets/suzanne.dof";
-    char* suzanne_obj_path = "./resources/objects/suzanne.obj";
+    char* suzanne_dof_path = "../../resources/assets/suzanne.dof";
+    char* suzanne_obj_path = "../../resources/objects/suzanne.obj";
     if (!PlatformFileExists(suzanne_dof_path)){
         WFObjToDof(suzanne_obj_path, suzanne_dof_path);
     }
 
-    char* font_ttf_path = "./resources/assets/cour.ttf";
-    char* font_png_path = "./resources/assets/cour.png";
+    char* font_ttf_path = "../../resources/assets/cour.ttf";
+    char* font_png_path = "../../resources/assets/cour.png";
     if (!PlatformFileExists(font_png_path)) {
         BuildFontAtlas(font_ttf_path, font_png_path);
     }
