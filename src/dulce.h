@@ -1,7 +1,6 @@
 #pragma once
 
 #include "platform_services.h"
-#include "world.cpp"
 
 struct GameFrameBuffer {
     void* memory;
@@ -10,8 +9,6 @@ struct GameFrameBuffer {
     i32 pitch;
     i32 bytes_per_pixel;
 };
-
-
 
 struct GameMemory {
     b32 is_initialized;

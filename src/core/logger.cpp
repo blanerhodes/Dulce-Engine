@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
-#include "defines.h"
 
 //b8 InitializeLogging(u64* memoryRequirement, void* state){
 //    *memoryRequirement = sizeof(LoggerSystemState);

@@ -1,3 +1,4 @@
+#pragma once
 #include "dulce.h"
 #include "math/dmath.h"
 #include "random.h"
@@ -121,8 +122,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         //.position = {game_state->t_sin, 0, game_state->t_sin},
         //.position = {adjusted_mouse_x, mouse_scroll, -adjusted_mouse_y},
         .position = point_light_pos,
-        .color = COLOR_WHITE,
-        .intensity = 1.0f
+        //.color = COLOR_WHITE,
+        //.intensity = 1.0f
     };
     RendererPushPointLight(renderer_state, point_light);
 
@@ -173,6 +174,15 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .texture_id = TexID_NoTexture
     };
     RendererPushPlane(renderer_state, plane);
+
+    //BasicMesh grid = {
+    //    .position = {0.0f, 0.0f, 0.0f},
+    //    .scale = {1.0f, 1.0f, 1.0f},
+    //    .rotation_angles = {0, 0, 0},
+    //    .color = COLOR_CYANA,
+    //    .texture_id = TexID_NoTexture
+    //};
+    //RendererPushGrid(renderer_state, 6, 6, 3, 3, grid);
 
     BasicMesh sky_plane = {
         .position = {0, 30.0f, 0.0f},

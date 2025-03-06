@@ -7,7 +7,7 @@ struct PixIn {
     float4 color : COL;
     float2 tex_coord : TEX;
     float3 normal : NOR;
-    float3 frag_pos : FP;
+    float3 ligth_direction : FP;
     float3 light_pos : LP;
     //float4 light_color : LC;
 };

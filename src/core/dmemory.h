@@ -1,5 +1,6 @@
 #pragma once
 
+
 struct MemoryArena {
     u64 size;
     u8* base;

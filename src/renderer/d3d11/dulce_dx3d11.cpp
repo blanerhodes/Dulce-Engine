@@ -60,7 +60,7 @@ static void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     swapchain_desc.SampleDesc.Count = 1;
     swapchain_desc.SampleDesc.Quality = 0;
     swapchain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapchain_desc.BufferCount = 1; //2 for d7s stuff
+    swapchain_desc.BufferCount = 1;
     swapchain_desc.Scaling = DXGI_SCALING_STRETCH;
     //If anyone is using FLIP_DISCARD / FLIP_SEQUENTIAL don't remove SetRenderTargets call from DrawTriangle.
     //Add the depthstencilview pointer instead of nullptr there. As FLIP mode removes binds every frame/flip.
@@ -79,10 +79,27 @@ static void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     g_d3d.device->CreateTexture2D(&depth_buffer_desc, 0, &g_d3d.depth_buffer);
     g_d3d.device->CreateDepthStencilView(g_d3d.depth_buffer, 0, &g_d3d.depth_buffer_view);
 
-    D3D11_RASTERIZER_DESC1 rasterizer_desc = {};
-    rasterizer_desc.FillMode = D3D11_FILL_SOLID;
-    rasterizer_desc.CullMode = D3D11_CULL_NONE; //this doesnt seem like its working
-    g_d3d.device->CreateRasterizerState1(&rasterizer_desc, &g_d3d.rasterizer_state);
+    D3D11_RASTERIZER_DESC1 rd_solid = {};
+    rd_solid.FillMode = D3D11_FILL_SOLID;
+    rd_solid.CullMode = D3D11_CULL_BACK; 
+    rd_solid.FrontCounterClockwise = false;
+    rd_solid.DepthClipEnable = true;
+    g_d3d.device->CreateRasterizerState1(&rd_solid, &g_d3d.solid_rs);
+
+    D3D11_RASTERIZER_DESC1 rd_wireframe = {};
+    rd_wireframe.FillMode = D3D11_FILL_WIREFRAME;
+    rd_wireframe.CullMode = D3D11_CULL_BACK; 
+    rd_wireframe.FrontCounterClockwise = false;
+    rd_wireframe.DepthClipEnable = true;
+    g_d3d.device->CreateRasterizerState1(&rd_wireframe, &g_d3d.wireframe_rs);
+
+    D3D11_RASTERIZER_DESC1 rd_no_cull = {};
+    rd_no_cull.FillMode = D3D11_FILL_SOLID;
+    rd_no_cull.CullMode = D3D11_CULL_NONE; 
+    rd_no_cull.FrontCounterClockwise = false;
+    rd_no_cull.DepthClipEnable = true;
+    g_d3d.device->CreateRasterizerState1(&rd_no_cull, &g_d3d.no_cull_rs);
+
 
     D3D11_SAMPLER_DESC sampler_desc = {};
     sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -276,6 +293,7 @@ static void D3DSetPixelShader(PixelShaderType type) {
 }
 
 static void D3DRenderCommands(RendererState* renderer) {
+    g_d3d.context->RSSetState(g_d3d.solid_rs);
     D3D11_MAPPED_SUBRESOURCE vertex_map_resource;
     g_d3d.context->Map(g_d3d.vertex_buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &vertex_map_resource);
     MemCopy(renderer->vertex_buffer->base_address, vertex_map_resource.pData, renderer->vertex_buffer->used_memory_size);

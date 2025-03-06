@@ -12,6 +12,8 @@ THINGS TO FIX/TWEAK:
 - circular dependency between render.cpp and dx3d11.cpp
 - ciccular dependendy between camera and GameInput files
 - world coords are used for objects but the camera position is still working off of renderer coords
+  - I think I meant coords already converted into what d3d11 expects. Its y+ is up and z+ is into the screen instead of how my world coords are
+    with y+ into the screen and z+ is up
 
 
 
@@ -41,4 +43,5 @@ THINGS TO FIX/TWEAK:
 
 10/20/23 TODO L145 wfobj_loader.h
 
-10/25/23 get stb truetype working, 2D UI shader, Rendering pipe for textk
+10/25/23 get stb truetype working, 2D UI shader, Rendering pipe for text
+

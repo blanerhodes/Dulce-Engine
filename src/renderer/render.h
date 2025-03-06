@@ -1,5 +1,8 @@
 #pragma once
 #include "texture.h"
+#include "defines.h"
+#include "dmath.h"
+#include "dmemory.h"
 
 #define COLOR_RED	   {1.0f, 0.0f, 0.0f}
 #define COLOR_GREEN	   {0.0f, 1.0f, 0.0f}
@@ -186,23 +189,61 @@ struct BasicMesh {
 };
 
 //TODO: have parameter on lights to say how far their light will reach
+//struct PointLight {
+//	Vec3 position;
+//	Vec3 color;
+//	f32 intensity;
+//};
+
+
+//struct DirectionalLight {
+//	Vec3 position;
+//	Vec3 direction;
+//	Vec3 rotation_angles;
+//	Vec3 color;
+//	f32 intensity;
+//};
+
 struct PointLight {
+	Vec4 ambient;
+	Vec4 diffuse;
+	Vec4 specular;
 	Vec3 position;
-	Vec3 color;
-	f32 intensity;
+	f32 range;
+	Vec3 attenuation;
+	f32 pad;
 };
 
 struct DirectionalLight {
-	Vec3 position;
+	Vec4 ambient;
+	Vec4 diffuse;
+	Vec4 specular;
 	Vec3 direction;
-	Vec3 rotation_angles;
-	Vec3 color;
-	f32 intensity;
+	f32 pad;
+};
+
+struct SpotLight {
+	Vec4 ambient;
+	Vec4 diffuse;
+	Vec4 specular;
+	Vec3 position;
+	f32 range;
+	Vec3 direction;
+	f32 spot;
+	Vec3 attenuation;
+	f32 pad;
 };
 
 struct TesselatedMesh {
 	BasicMesh mesh;
 	u32 divisions;
+};
+
+struct Material {
+	Vec4 ambient;
+	Vec4 diffuse;
+	Vec4 specular; //specular.w = specular_power
+	Vec4 reflect;
 };
 
 

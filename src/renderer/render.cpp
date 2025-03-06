@@ -3,6 +3,7 @@
 #include "dulce.h"
 #include "wfobj_loader.h"
 #include "renderer_shape_gen.h"
+#include "defines.h"
 //NOTE: allowing only png and bmp right now
 //#define STBI_NO_JPEG
 //#define STBI_NO_PSD
@@ -515,9 +516,9 @@ u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
 //NOTE: this is hardcoding a point light to be in slot 0 of the constant buffer
 void RendererPushPointLight(RendererState* renderer, PointLight light) {
 	Vec4 pos = {light.position.x, light.position.y, light.position.z, 1.0f};
-	Vec4 color = {light.color.r, light.color.g, light.color.b, light.intensity};
+	//Vec4 color = {light.color.r, light.color.g, light.color.b, light.intensity};
 	RendererConstantBufferCommit(renderer->vertex_constant_buffer, &pos, 0, sizeof(pos));
-	RendererConstantBufferCommit(renderer->vertex_constant_buffer, &color, 0, sizeof(color));
+	//RendererConstantBufferCommit(renderer->vertex_constant_buffer, &color, 0, sizeof(color));
 }
 
 //TODO: make this renderer agnostic
@@ -669,6 +670,68 @@ void RendererPushAsset(RendererState* renderer, BasicMesh mesh) {
 		.vertex_constant_buffer_offset = const_buff_offset,
 		.topology = RenderTopology_TriangleList,
 		.texture_id = mesh.texture_id,
+	};
+	PushRenderCommand(renderer->command_buffer, command);
+}
+
+void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh grid) {
+
+	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
+	RendererIndexBuffer* index_buffer = renderer->index_buffer;
+	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+
+	u32 vertex_count = rows * cols;
+	u32 face_count = (rows-1) * (cols-1) * 2;
+	u32 index_count = face_count * 3;
+
+	f32 half_width = 0.5f * width;
+	f32 half_depth = 0.5f * depth;
+	f32 dx = width / (cols-1);
+	f32 dy = depth / (rows-1);
+	f32 du = 1.0f / (cols-1);
+	f32 dv = 1.0f / (rows-1);
+
+	Vertex* vertices = PushArray(&renderer->scratch_storage, vertex_count, Vertex);
+	for (u32 i = 0; i < rows; i++) {
+		f32 y = half_depth - i*dy;
+		for (u32 j = 0; j < cols; j++) {
+			f32 x = -half_width + j*dx;
+			vertices[i*cols+j].position = {x, y, 0.0f};
+			vertices[i*cols+j].normal = {0.0f, 0.0f, 1.0f};
+			vertices[i*cols+j].color = grid.color;
+			//vertices[i*rows+j].tangent_u = {1.0f, 0.0f, 0.0f};
+			vertices[i*cols+j].tex_coord.x = j*du;
+			vertices[i*cols+j].tex_coord.y = i*dv;
+		}
+	}
+	RendererCommitVertexMemory(vertex_buffer, vertices, vertex_count);
+
+	Index* indices = PushArray(&renderer->scratch_storage, index_count, Index);
+	u32 k = 0;
+	for (u32 i = 0; i < rows-1; i++) {
+		for (u32 j = 0; j < cols-1; j++) {
+			indices[k].value   = i*cols + j;
+			indices[k+1].value = i*cols + j+1;
+			indices[k+2].value = (i+1)*cols + j;
+			indices[k+3].value = (i+1)*cols + j;
+			indices[k+4].value = i*cols + j+1;
+			indices[k+5].value = (i+1)*cols + j+1;
+			k += 6;
+		}
+	}
+	RendererCommitIndexMemory(index_buffer, indices, index_count);
+
+	Mat4 transform = RendererGenBasicMeshTransform(grid, false);
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
+
+	RenderCommand command = {
+		.vertex_count = vertex_count,
+		.vertex_buffer_offset = vertex_buffer->vertex_count - vertex_count,
+		.index_count = index_count,
+		.index_buffer_offset = index_buffer->index_count - index_count,
+		.vertex_constant_buffer_offset = const_buff_offset,
+		.topology = RenderTopology_TriangleList,
+		.texture_id = grid.texture_id
 	};
 	PushRenderCommand(renderer->command_buffer, command);
 }

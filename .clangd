@@ -1,0 +1,49 @@
+CompileFlags:
+    Add: 
+      - -std=c++20
+      - C:\\\dev\\\d3d_proj\\\win32_platform.cpp 
+      - -g 
+      - -Wvarargs 
+      - -Wall
+      - -Werror
+      - -Wno-writable-strings
+      - -Wno-missing-braces
+      - -Wno-unused-function 
+      - -Wno-microsoft-include
+      - -Wno-unused-variable
+      - -Wno-nonportable-include-path
+      - -Wno-class-conversion 
+      - -Wno-uninitialized
+      - -Wno-unused-but-set-variable
+      - -Wno-address-of-temporary
+      - -Wno-bool-conversion 
+      - -Wno-c++11-narrowing
+      - -Wc99-designator
+      - -o C:\\\dev\\\d3d_proj\\\bin\\\debug\\\win32_dulce.exe
+      - -D_DEBUG
+      - -DDEXPORT
+      - -D_CRT_SECURE_NO_WARNINGS
+      - -IC:\\\dev\\\d3d_proj\\\src
+      - -IC:\\\dev\\\d3d_proj\\\src\\\core
+      - -IC:\\\dev\\\d3d_proj\\\src\\\math,
+      - -IC:\\\dev\\\d3d_proj\\\src\\\vendor\\\stb
+      - -IC:\\\dev\\\d3d_proj\\\src\\\renderer
+      - -IC:\\\dev\\\d3d_proj\\\src\\\renderer\\\d3d11, 
+      - -I"C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um"
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\defines.h
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\asserts.h
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\math\\\dmath.h
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\renderer\\\render.h
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\dulce.h
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\game_input.h
+      - -include=C:\\\dev\\\d3d_proj\\\src\\\core\\\dmemory.h
+      - -lmsvcrtd
+      - -L"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64"
+      - -luser32
+      - -lgdi32
+      - -ld3d11
+      - -ldxgi
+      - -ldxguid
+      - -lwinmm
+      - -ld3dcompiler
+    Compiler: clang++

@@ -6,7 +6,7 @@
 #define CAMERA_DEFAULT_ROTATION_SPEED   5.0f
 #define CAMERA_DEFAULT_ZOOM             45.0f
 #define CAMERA_DEFAULT_WORLD_UP         {0.0f, 1.0f, 0.0f}
-#define CAMERA_DEFAULT_POSITION         {0.0f, 2.0f, 5.0f} //this is in renderer coords not world coords
+#define CAMERA_DEFAULT_POSITION         {0.0f, 2.0f, 3.0f} //this is in renderer coords not world coords
 
 struct Camera {
 	Vec3 position;

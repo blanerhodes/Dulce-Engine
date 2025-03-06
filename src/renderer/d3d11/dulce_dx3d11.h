@@ -27,7 +27,9 @@ struct Direct3d {
     ID3D11RenderTargetView* frame_buffer_view;
     ID3D11Texture2D* depth_buffer;
     ID3D11DepthStencilView* depth_buffer_view;
-    ID3D11RasterizerState1* rasterizer_state;
+    ID3D11RasterizerState1* solid_rs;
+    ID3D11RasterizerState1* wireframe_rs;
+    ID3D11RasterizerState1* no_cull_rs;
     ID3D11DepthStencilState* depth_stencil_state;
     D3D11_VIEWPORT viewport;
 

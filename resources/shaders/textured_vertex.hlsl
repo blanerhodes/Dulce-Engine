@@ -1,8 +1,59 @@
+struct PointLight {
+	float4 ambient;
+	float4 diffuse;
+	float4 specular;
+	float3 position;
+	float range;
+	float3 attenuation;
+	float pad;
+};
+
+struct DirectionalLight {
+	float4 ambient;
+	float4 diffuse;
+	float4 specular;
+	float3 direction;
+	float pad;
+};
+
+struct SpotLight {
+	float4 ambient;
+	float4 diffuse;
+	float4 specular;
+	float3 position;
+	float range;
+	float3 direction;
+	float spot;
+	float3 attenuation;
+	float pad;
+};
+
+struct Material {
+	float4 ambient;
+	float4 diffuse;
+	float4 specular;
+	float4 reflect;
+};
+
 cbuffer ProjView : register(b0) {
     row_major float4x4 proj_view;
     row_major float4x4 norm_transform;
     float4 light_pos;
     float4 light_color;
+};
+
+cbuffer cbPerObject {
+    float4x4 g_world;
+    float4x4 g_world_inv_transpose;
+    float4x4 g_world_view_proj;
+    Material g_material;
+};
+
+cbuffer cbPerFrame : register(b2) {
+    DirectionalLight g_dir_light;
+    PointLight g_point_light;
+    SpotLight g_spot_light;
+    float3 g_eye_pos_w;
 };
 
 cbuffer ModelTransform : register(b1) {
@@ -21,19 +72,96 @@ struct VertOut {
     float4 color : COL;
     float2 tex_coord : TEX;
     float3 normal : NOR;
-    float3 frag_pos : FP;
+    float3 light_direction : FP;
     float3 light_pos : LP;
     //float4 light_color : LC;
 };
 
+void ComputeDirectionalLight(Material mat, DirectionalLight light, float3 normal, float3 to_eye, out float4 ambient, out float4 diffuse, out float4 spec) {
+    ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+    float3 light_vec = -light.direction;
+    ambient = mat.ambient * light.ambient;
+
+    float diffuse_factor = dot(light_vec, normal);
+    [flatten]
+    if (diffuse_factor > 0.0f) {
+        float3 v = reflect(-light_vec, normal);
+        float p = mat.specular.w;
+        float spec_factor = pow(max(dot(v, to_eye), 0.0f), p);
+        diffuse = diffuse_factor * mat.diffuse * light.diffuse;
+        spec = spec_factor * mat.specular * light.specular;
+    }
+}
+
+void ComputePointLight(Material mat, PointLight light, float3 pos, float3 normal, float3 to_eye, out float4 ambient, out float4 diffuse, out float4 spec) {
+    ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+    float3 light_vec = light.position - pos;
+    float d = length(light_vec);
+    if (d > light.range) {
+        return;
+    }
+    light_vec /= d;
+    ambient = mat.ambient * light.ambient;
+
+    float diffuse_factor = dot(light_vec, normal);
+    [flatten]
+    if (diffuse_factor > 0.0f) {
+        float3 v = reflect(-light_vec, normal);
+        float p = mat.specular.w;
+        float spec_factor = pow(max(dot(v, to_eye), 0.0f), p);
+        diffuse = diffuse_factor * mat.diffuse * light.diffuse;
+        spec = spec_factor * mat.specular * light.specular;
+    }
+
+    float att = 1.0f / dot(light.attenuation, float3(1.0f, d, d*d));
+    diffuse *= att;
+    spec *= att;
+}
+
+void ComputeSpotLight(Material mat, SpotLight light, float3 pos, float3 normal, float3 to_eye, out float4 ambient, out float4 diffuse, out float4 spec) {
+    ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+    float3 light_vec = light.position - pos;
+    float d = length(light_vec);
+    if (d > light.range) {
+        return;
+    }
+    light_vec /= d;
+    ambient = mat.ambient * light.ambient;
+
+    float diffuse_factor = dot(light_vec, normal);
+    [flatten]
+    if (diffuse_factor > 0.0f) {
+        float3 v = reflect(-light_vec, normal);
+        float p = mat.specular.w;
+        float spec_factor = pow(max(dot(v, to_eye), 0.0f), p);
+        diffuse = diffuse_factor * mat.diffuse * light.diffuse;
+        spec = spec_factor * mat.specular * light.specular;
+    }
+
+    float spot = pow(max(dot(-light_vec, light.direction), 0.0f), light.spot);
+    ambient *= spot;
+
+    float att = spot / dot(light.attenuation, float3(1.0f, d, d*d));
+    diffuse *= att;
+    spec *= att;
+}
 
 VertOut main(VertIn input) {
-    //process UI stuff if NOR is all 0s
+    //process UI stuff if normal is all 0s
     float4x4 mvp = mul(proj_view, model_transform);
     VertOut output;
-    output.frag_pos = (float3) mul(model_transform, float4(input.position, 1.0f));
     output.normal = mul((float3x3) model_transform, input.normal);
     output.position = mul(mvp, float4(input.position, 1.0f));
+    output.light_direction = light_pos - output.position; 
     output.color = input.color;
     output.tex_coord = input.tex_coord;
     output.light_pos = light_pos;
