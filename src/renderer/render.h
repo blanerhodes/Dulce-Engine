@@ -3,6 +3,8 @@
 #include "defines.h"
 #include "dmath.h"
 #include "dmemory.h"
+#include "game_input.h"
+#include "dulce.h"
 
 #define COLOR_RED	   {1.0f, 0.0f, 0.0f}
 #define COLOR_GREEN	   {0.0f, 1.0f, 0.0f}
@@ -246,6 +248,55 @@ struct Material {
 	Vec4 reflect;
 };
 
+RendererCommandBuffer* RendererInitCommandBuffer(MemoryArena* arena, u32 buffer_size);
+void RendererInitCommandBuffer(RendererState* state, u32 buffer_size);
+void RendererResetCommandBuffer(RendererCommandBuffer* buffer);
+void PushRenderCommand(RendererCommandBuffer* buffer, RenderCommand command);
 
-//SHAPE TYPES
-//cylinder, sphere, pyramid with any number of base faces, spheroid, cone
+RendererVertexBuffer* RendererInitVertexBuffer(MemoryArena* arena, u32 buffer_size);
+void RendererInitVertexBuffer(RendererState* state, u32 buffer_size);
+void RendererResetVertexBuffer(RendererVertexBuffer* buffer);
+void RendererCommitVertexMemory(RendererVertexBuffer* buffer, void* data, u32 count);
+
+RendererIndexBuffer* RendererInitIndexBuffer(MemoryArena* arena, u32 buffer_size);
+void RendererInitIndexBuffer(RendererState* state, u32 buffer_size);
+void RendererResetIndexBuffer(RendererIndexBuffer* buffer);
+void RendererCommitIndexMemory(RendererIndexBuffer* buffer, void* data, u32 count);
+
+RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_frame_slots = 1);
+void RendererInitConstantBuffer(RendererState* state, u32 per_frame_slots = 1);
+void RendererConstantBufferClear(RendererConstantBuffer* buffer);
+u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer, u32 start_index = 0, u32 end_index = 0);
+u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32 slot, u32 size = 0);
+u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data, u32 size = 0);
+u32 RendererCommitConstantObjectMemory(RendererConstantBuffer* buffer, void* data, u32 size = 0);
+
+void RendererInitTextureIdTable(RendererState* renderer);
+RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim dimension);
+void RendererInitTextureBuffer(RendererState* state, TextureDim dimension);
+void RendererResetTextureBuffer(RendererTextureBuffer* texture_buffer);
+u32 RendererLoadTexture(RendererState* renderer, u32 texture_id);
+
+void RendererPushPlane(RendererState* renderer, BasicMesh plane_data);
+void RendererPushCube(RendererState* renderer, BasicMesh cube_data);
+void RendererPushCone(RendererState* renderer, BasicMesh cone);
+
+void RendererPushPyramid(RendererState* renderer, BasicMesh mesh);
+void RendererPushCylinder(RendererState* renderer, BasicMesh cyl);
+void RendererPushAsset(RendererState* renderer, BasicMesh mesh);
+void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh grid);
+
+void RendererPushPointLight(RendererState* renderer, PointLight light);
+void RendererPushClear(Vec3 color);
+
+void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state, GameInput* input);
+u32 BinarySearch(u32 arr[], u32 size, u32 target);
+
+u8* RendererLookupAsset(RendererState* renderer, AssetID id);
+
+void InitAssetHashMap(MemoryArena* arena, AssetHashMap* hashmap, u32 num_slots);
+u32 AssetIDHash(AssetID id, u32 map_size);
+AssetData* AssetHashMapGet(AssetHashMap* hashmap, AssetID id);
+AssetData* AssetHashMapInsert(AssetHashMap* hashmap, AssetData asset);
+void LoadAssetConfig(RendererState* renderer);
+void RendererInitAssets(RendererState* state, u32 num_slots);

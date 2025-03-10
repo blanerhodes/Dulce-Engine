@@ -1,5 +1,5 @@
 #pragma once
-
+#include "defines.h"
 
 struct MemoryArena {
     u64 size;
@@ -46,3 +46,17 @@ struct PoolArena {
     Pool pool;
 };
 
+
+#define PushStruct(arena, type) (type*)PushSize_(arena, sizeof(type))
+#define PushArray(arena, count, type) (type*)PushSize_(arena, (count) * sizeof(type))
+#define PushSize(arena, size) (u8*)PushSize_(arena, size)
+#define PushCopy(arena, src, count, type) (type*)PushCopy_(arena, src, (count) * sizeof(type))
+
+#define PushStructStack(arena, type) (type*)PushSizeStack_(arena, sizeof(type))
+#define PushArrayStack(arena, count, type) (type*)PushSizeStack_(arena, (count) * sizeof(type))
+#define PushSizeStack(arena, size) (u8*)PushSizeStack_(arena, size)
+
+void InitializeArena(MemoryArena* arena, u64 size, u8* base);
+void ArenaZeroMemory(MemoryArena* arena);
+void ArenaReset(MemoryArena* arena);
+void MemCopy(void* src, void* dst, u64 size);

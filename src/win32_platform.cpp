@@ -3,11 +3,15 @@
 #include "platform_services.h"
 #include "core/logger.cpp"
 #include "core/dmemory.cpp"
-#include "math/dmath.cpp"
 #include "core/dstring.cpp"
 #include "win32_platform.h"
-
-
+#include "renderer/d3d11/dulce_dx3d11.h"
+#include "game_input.h"
+#include "camera.cpp"
+#include "renderer/render.cpp"
+#include "renderer/d3d11/dulce_dx3d11.cpp"
+#include "dulce.cpp"
+#include "renderer/font_atlas_maker.cpp"
 #include <windows.h>
 #include <ShellScalingApi.h>
 
@@ -17,16 +21,6 @@ static i64 g_perf_count_frequency;
 static WINDOWPLACEMENT g_window_position = {sizeof(g_window_position)};
 Win32FrameBuffer g_back_buffer;
 static HDC g_window_dc;
-
-#include "renderer/d3d11/dulce_dx3d11.h"
-static Direct3d g_d3d;
-#include "game_input.h"
-#include "camera.cpp"
-#include "renderer/render.cpp"
-#include "renderer/d3d11/dulce_dx3d11.cpp"
-#include "dulce.cpp"
-#include "renderer/font_atlas_maker.cpp"
-
 
 static GameInput input[2] = {};
 static GameInput* new_input = &input[0];

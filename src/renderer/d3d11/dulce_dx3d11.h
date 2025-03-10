@@ -50,3 +50,9 @@ struct Direct3d {
     u32 view_height;
     f32 aspect_ratio;
 };
+
+static Direct3d g_d3d;
+
+void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height);
+void D3DInitSubresources(RendererState* renderer);
+void D3DRenderCommands(RendererState* renderer);

@@ -4,6 +4,10 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/src/**",
+                "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/math",
+                "${workspaceFolder}/src/renderer",
+                "${workspaceFolder}/src/renderer/d3d11",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um"
             ],
             "defines": [

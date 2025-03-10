@@ -1,4 +1,7 @@
 #pragma once
+#include "defines.h"
+#include "render.h"
+#include "dmath.h"
 
 /*TODO----------------------
  - remove duplicate vertices from cylinder generation since they can share normals between faces

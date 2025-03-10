@@ -1,4 +1,7 @@
 #pragma once
+#include "defines.h"
+#include "asserts.h"
+#include "logger.h"
 
 void RendererGenColorAtlas(void* dst, u32 dimension) {
 	DASSERT(dimension >= DefaultColors_Count*3);

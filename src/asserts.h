@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defines.h"
+#include "logger.h"
 
 //disable by commenting out the line below
 #define DASSERTIONS_ENABLED

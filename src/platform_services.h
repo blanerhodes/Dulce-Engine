@@ -1,4 +1,5 @@
 #pragma once
+#include "defines.h"
 //NOTE: this file is just forward declaring services that the platform provides to the engine
 
 struct DebugReadFileResult {

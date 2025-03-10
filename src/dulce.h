@@ -1,6 +1,9 @@
 #pragma once
 
+#include "defines.h"
+#include "camera.h"
 #include "platform_services.h"
+
 
 struct GameFrameBuffer {
     void* memory;
@@ -25,72 +28,10 @@ struct ThreadContext {
     i32 placeholder;
 };
 
-struct LoadedBitmap {
-    i32 width;
-    i32 height;
-    u32* pixels;
-};
-
-struct HeroBitmaps {
-    i32 align_x;
-    i32 align_y;
-    LoadedBitmap head;
-    LoadedBitmap cape;
-    LoadedBitmap torso;
-};
-
-enum EntityType {
-    ENTITY_TYPE_NULL, 
-    ENTITY_TYPE_HERO, 
-    ENTITY_TYPE_WALL
-};
-
-
-struct HighEntity {
-    Vec2 pos; //already relative to the camera
-    Vec2 velocity;
-    u32 facing_direction;
-    u32 chunk_z;
-    f32 z;
-    f32 delta_z;
-    u32 low_entity_index;
-};
-
-struct LowEntity {
-    EntityType type;
-    WorldPosition pos;
-    f32 height;
-    f32 width;
-    b32 collides;
-    i32 dabs_tile_z;
-    u32 high_entity_index;
-};
-
-struct Entity {
-    u32 low_index;
-    LowEntity* low;
-    HighEntity* high;
-};
-
-struct LowEntityChunkRef {
-    WorldChunk* tile_chunk;
-    u32 entity_index_in_chunk;
-};
-
 struct GameState {
     MemoryArena world_arena;
-    World* world;
-    LoadedBitmap backdrop;
-    LoadedBitmap shadow;
-    HeroBitmaps hero_bitmaps[4];
     u32 camera_following_entity_index;
-    WorldPosition camera_pos;
     u32 player_index_for_controller[ArrayCount(((GameInput*)0)->controllers)];
-
-    u32 high_entity_count;
-    HighEntity high_entities[256];
-    u32 low_entity_count;
-    LowEntity low_entities[100000];
 
     Camera camera;
 

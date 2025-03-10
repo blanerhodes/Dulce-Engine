@@ -4,6 +4,8 @@
 #include "wfobj_loader.h"
 #include "renderer_shape_gen.h"
 #include "defines.h"
+#include "dmemory.h"
+#include "game_input.h"
 //NOTE: allowing only png and bmp right now
 //#define STBI_NO_JPEG
 //#define STBI_NO_PSD
@@ -36,7 +38,6 @@ RendererCommandBuffer* RendererInitCommandBuffer(MemoryArena* arena, u32 buffer_
 void RendererInitCommandBuffer(RendererState* state, u32 buffer_size) {
 	state->command_buffer = RendererInitCommandBuffer(&state->permanent_storage, buffer_size);
 }
-
 
 void RendererResetCommandBuffer(RendererCommandBuffer* buffer) {
 	buffer->used_memory_size = 0;
@@ -121,7 +122,7 @@ void RendererCommitIndexMemory(RendererIndexBuffer* buffer, void* data, u32 coun
 }
 
 //NOTE: this is forcing per frame data do be in front section and per object data to follow after that
-RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_frame_slots = 1) {
+RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_frame_slots) {
 	u32 buffer_size = MAX_UNIFORM_BUFFER_SLOTS * UNIFORM_BUFFER_SLOT_SIZE;
 	RendererConstantBuffer* buffer = PushStruct(arena, RendererConstantBuffer);
 	buffer->base_address = PushSize(arena, buffer_size);
@@ -140,7 +141,7 @@ RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_f
 	return buffer;
 }
 
-void RendererInitConstantBuffer(RendererState* state, u32 per_frame_slots = 1) {
+void RendererInitConstantBuffer(RendererState* state, u32 per_frame_slots) {
 	state->vertex_constant_buffer = RendererInitConstantBuffer(&state->permanent_storage, per_frame_slots);
 }
 
@@ -154,7 +155,7 @@ void RendererConstantBufferClear(RendererConstantBuffer* buffer) {
 	buffer->slot_addresses[0] = buffer->base_address;
 }
 
-u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer, u32 start_index = 0, u32 end_index = 0) {
+u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer, u32 start_index, u32 end_index) {
 	end_index = (end_index == 0) ? buffer->max_slots : end_index;
 	for (u32 i = start_index; i < end_index; i++) {
 		if (buffer->slot_addresses[i] == 0) {
@@ -164,7 +165,7 @@ u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer, u32 start_
 	return buffer->max_slots; //NOTE: need to make dealing with a full constant buffer more robust
 }
 
-u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32 slot, u32 size = 0) {
+u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32 slot, u32 size) {
 	DASSERT(slot < buffer->max_slots);
 	if (buffer->slot_addresses[slot] == 0) {
 		DASSERT(size <= buffer->slot_size);
@@ -189,7 +190,7 @@ u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32
 	return slot * buffer->slot_size;
 }
 
-u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data, u32 size = 0) {
+u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data, u32 size) {
 	u32 result_slot = RendererConstantBufferGetNextFree(buffer, 0, buffer->num_per_frame_slots);
 	DASSERT(result_slot < buffer->max_slots);
 	u32 offset_from_base = RendererConstantBufferCommit(buffer, data, result_slot, size);
@@ -197,7 +198,7 @@ u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data
 }
 
 //NOTE: this returns a byte offset ---from buffer->per_object_data, NOT base_address---
-u32 RendererCommitConstantObjectMemory(RendererConstantBuffer* buffer, void* data, u32 size = 0) {
+u32 RendererCommitConstantObjectMemory(RendererConstantBuffer* buffer, void* data, u32 size) {
 	u32 result_slot = RendererConstantBufferGetNextFree(buffer, buffer->num_per_frame_slots);
 	DASSERT(result_slot < buffer->max_slots);
 	u32 offset_from_base_addr = RendererConstantBufferCommit(buffer, data, result_slot, size);

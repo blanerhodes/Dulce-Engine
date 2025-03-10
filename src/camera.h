@@ -1,4 +1,7 @@
 #pragma once
+#include "defines.h"
+#include "dmath.h"
+#include "game_input.h"
 
 #define CAMERA_DEFAULT_YAW             -90.0f
 #define CAMERA_DEFAULT_PITCH            0.0f
@@ -20,3 +23,17 @@ struct Camera {
 	f32 rotation_speed;
 	f32 zoom;
 };
+
+
+void CameraMoveForward(Camera* camera, f32 dt);
+void CameraMoveBackward(Camera* camera, f32 dt);
+void CameraMoveLeft(Camera* camera, f32 dt);
+void CameraMoveRight(Camera* camera, f32 dt);
+void CameraMoveUp(Camera* camera, f32 dt);
+void CameraMoveDown(Camera* camera, f32 dt);
+void CameraUpdateVectors(Camera* camera);
+void CameraAdjustYaw(Camera* camera, f32 degrees, f32 dt);
+void CameraAdjustPitch(Camera* camera, f32 degrees, f32 dt);
+Mat4 CameraGetViewMatrix(Camera* camera);
+Camera MakeCamera(Vec3 pos, Vec3 world_up, f32 yaw, f32 pitch);
+void CameraUpdate(Camera* camera, GameInput* input);

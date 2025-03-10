@@ -1,4 +1,5 @@
 #pragma once
+#include "defines.h"
 
 static u32 random_number_table[] = {
     0x4f0143b, 0x3402005, 0x26f2b01, 0x22796b6, 0x57343bb, 0x2d9954e, 0x06f9425, 0x1789180,

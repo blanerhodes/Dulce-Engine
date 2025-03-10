@@ -2,6 +2,9 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <d3d11sdklayers.h>
+#include "defines.h"
+#include "../render.h"
+#include "asserts.h"
 
 enum RenderGeometryOffset {
     GeoOffset_Cube,
@@ -29,7 +32,7 @@ struct D3DState {
 typedef HRESULT DXGIGetDebugInterface_ (REFIID, void**);
 static DXGIGetDebugInterface_* DxgiGetDebugInterface;
 
-static void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
+void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     D3D_FEATURE_LEVEL feature_levels[] = {D3D_FEATURE_LEVEL_11_0};
 
     D3D11CreateDevice(0, D3D_DRIVER_TYPE_HARDWARE, 0, D3D11_CREATE_DEVICE_DEBUG, feature_levels, ArrayCount(feature_levels), D3D11_SDK_VERSION, &g_d3d.base_device, 0, &g_d3d.base_context);
@@ -129,13 +132,13 @@ static void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     g_d3d.next_free_tex_slot = 0;
 }
 
-static void D3DClearBuffer(f32 red, f32 green, f32 blue) {
+void D3DClearBuffer(f32 red, f32 green, f32 blue) {
     Vec4 color = {red, green, blue, 1.0f};
     g_d3d.context->ClearRenderTargetView(g_d3d.frame_buffer_view, (f32*)&color);
     g_d3d.context->ClearDepthStencilView(g_d3d.depth_buffer_view, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
-static D3D11_PRIMITIVE_TOPOLOGY D3DGetTopology(RenderTopology topology) {
+D3D11_PRIMITIVE_TOPOLOGY D3DGetTopology(RenderTopology topology) {
     switch (topology) {
         case RenderTopology_TriangleList: 
             return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -149,7 +152,7 @@ static D3D11_PRIMITIVE_TOPOLOGY D3DGetTopology(RenderTopology topology) {
 }
 
 
-static void D3DInitSubresources(RendererState* renderer) {
+void D3DInitSubresources(RendererState* renderer) {
     D3D11_BUFFER_DESC buffer_desc = {
         .ByteWidth = renderer->vertex_buffer->max_memory_size,
         .Usage = D3D11_USAGE_DYNAMIC,
@@ -237,7 +240,7 @@ static void D3DInitSubresources(RendererState* renderer) {
     g_d3d.context->IASetInputLayout(input_layout);
 }
 
-static void D3DCreateTextureResource(Texture* texture, u32 dimension) {
+void D3DCreateTextureResource(Texture* texture, u32 dimension) {
     g_d3d.textures_2d[g_d3d.next_free_tex_slot].id = texture->id;
     D3D11_TEXTURE2D_DESC tex_desc = {
         .Width = dimension,
@@ -273,7 +276,7 @@ static void D3DCreateTextureResource(Texture* texture, u32 dimension) {
     DASSERT(g_d3d.next_free_tex_slot < ArrayCount(g_d3d.textures_2d));
 }
 
-static void D3DBindTexture(u32 tex_id) {
+void D3DBindTexture(u32 tex_id) {
     for (u32 i = 0; i < ArrayCount(g_d3d.textures_2d); i++) {
         if (g_d3d.textures_2d[i].id == tex_id) {
             g_d3d.context->PSSetShaderResources(0, 1, &g_d3d.textures_2d[i].shader_view);
@@ -283,16 +286,16 @@ static void D3DBindTexture(u32 tex_id) {
     DERROR("D3DBindTexture: No texture with id: %u found", tex_id);
 }
 
-static void D3DBindSampler() {
+void D3DBindSampler() {
     g_d3d.context->PSSetSamplers(0, 1, &g_d3d.sampler);
 }
 
-static void D3DSetPixelShader(PixelShaderType type) {
+void D3DSetPixelShader(PixelShaderType type) {
     g_d3d.context->PSSetShader(g_d3d.pixel_shaders[type], 0, 0);
     g_d3d.bound_pixel_shader = type;
 }
 
-static void D3DRenderCommands(RendererState* renderer) {
+void D3DRenderCommands(RendererState* renderer) {
     g_d3d.context->RSSetState(g_d3d.solid_rs);
     D3D11_MAPPED_SUBRESOURCE vertex_map_resource;
     g_d3d.context->Map(g_d3d.vertex_buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &vertex_map_resource);

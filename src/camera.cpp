@@ -1,6 +1,7 @@
 #include "camera.h"
-
-
+#include "defines.h"
+#include "dmath.h"
+#include "game_input.h"
 
 DINLINE void CameraMoveForward(Camera* camera, f32 dt) {
 	camera->position += camera->speed * dt * camera->front;

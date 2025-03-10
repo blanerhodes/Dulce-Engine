@@ -1,8 +1,11 @@
 #pragma once
 #include "dulce.h"
-#include "math/dmath.h"
-#include "random.h"
+#include "dmath.h"
 #include "dinstrinsics.h"
+#include "game_input.h"
+#include "renderer/render.h"
+#include "asserts.h"
+#include "renderer/d3d11/dulce_dx3d11.h"
 
 static char* GameControllerKeyIndexToString(GameControllerKeys key) {
     char* result = game_controller_key_strings[key];

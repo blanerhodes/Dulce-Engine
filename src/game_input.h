@@ -1,4 +1,5 @@
 #pragma once
+#include "defines.h"
 
 struct GameButtonState {
     u32 half_transition_count;

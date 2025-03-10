@@ -1,12 +1,7 @@
-struct StringHeader {
-    u8 size;
-    u8 length;
-    //allocator??
-};
+#include "dstring.h"
+#include "defines.h"
+#include "logger.h"
 
-struct String {
-    char* cstr; 
-};
 
 u32 StringLength(u8* str) {
     u32 result = 0;
@@ -62,7 +57,7 @@ inline b32 IsWhiteSpace(char c) {
     return (c == ' ') || (c == '\t') || (c == '\v') || (c == '\f') || IsEndOfLine(c);
 }
 
-inline u32 StringCopyToWS(u8* src, u8* dest, b32 include_ws = false) {
+inline u32 StringCopyToWS(u8* src, u8* dest, b32 include_ws) {
     u32 num_copied = 0;
     while(*src && dest && !IsWhiteSpace(*src)) {
         *dest = *src;

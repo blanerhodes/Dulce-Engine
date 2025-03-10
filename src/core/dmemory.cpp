@@ -1,13 +1,6 @@
 #include "dmemory.h"
-
-#define PushStruct(arena, type) (type*)PushSize_(arena, sizeof(type))
-#define PushArray(arena, count, type) (type*)PushSize_(arena, (count) * sizeof(type))
-#define PushSize(arena, size) (u8*)PushSize_(arena, size)
-#define PushCopy(arena, src, count, type) (type*)PushCopy_(arena, src, (count) * sizeof(type))
-
-#define PushStructStack(arena, type) (type*)PushSizeStack_(arena, sizeof(type))
-#define PushArrayStack(arena, count, type) (type*)PushSizeStack_(arena, (count) * sizeof(type))
-#define PushSizeStack(arena, size) (u8*)PushSizeStack_(arena, size)
+#include "defines.h"
+#include "asserts.h"
 
 void* PushCopy_(MemoryArena* arena, void* src, u64 size) {
     DASSERT((arena->used + size) <= arena->size);
@@ -26,22 +19,22 @@ void* PushSize_(MemoryArena* arena, size_t size) {
     return result;
 }
 
-static void InitializeArena(MemoryArena* arena, u64 size, u8* base) {
+void InitializeArena(MemoryArena* arena, u64 size, u8* base) {
     arena->size = size;
     arena->base = base;
     arena->used = 0;
 }
 
-static void ArenaZeroMemory(MemoryArena* arena) {
+void ArenaZeroMemory(MemoryArena* arena) {
     memset(arena->base, 0, arena->size);
 }
 
-static void ArenaReset(MemoryArena* arena) {
+void ArenaReset(MemoryArena* arena) {
     ArenaZeroMemory(arena);
     arena->used = 0;
 }
 
-static void MemCopy(void* src, void* dst, u64 size) {
+void MemCopy(void* src, void* dst, u64 size) {
     memcpy(dst, src, size);
 }
 

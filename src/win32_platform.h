@@ -1,4 +1,5 @@
 #pragma once
+#include "defines.h"
 
 struct Win32FrameBuffer {
     BITMAPINFO info;
