@@ -381,12 +381,20 @@ DINLINE Vec3 Vec3Create(f32 x, f32 y, f32 z){
     return result;
 }
 
-
 DINLINE Vec3 CopyVec3(Vec3 src){
     Vec3 result = {};
     result.x = src.x;
     result.y = src.y;
     result.z = src.z;
+    return result;
+}
+
+DINLINE Vec4 Vec3ToVec4(Vec3 v, f32 w) {
+    Vec4 result = {};
+    result.x = v.x;
+    result.y = v.y;
+    result.z = v.z;
+    result.w = w;
     return result;
 }
 

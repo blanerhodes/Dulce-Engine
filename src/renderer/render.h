@@ -161,6 +161,17 @@ struct RendererMemory {
 	void* scratch_storage;
 };
 
+struct PerObjectConstants {
+	Mat4 model_transform;
+};
+
+struct PerFrameConstants {
+	Mat4 proj_view;
+	Mat4 norm_transform;
+	Vec4 light_pos;
+	Vec4 light_color;
+};
+
 struct RendererState {
 	MemoryArena permanent_storage;
 	RendererCommandBuffer* command_buffer;
@@ -176,9 +187,9 @@ struct RendererState {
 	//TODO: this probably needs to be a hashmap too
 	AssetLookup* assets_table;
 	AssetHashMap loaded_assets;
+
+	PerFrameConstants per_frame_constants;
 };
-
-
 
 struct BasicMesh {
 	Vec3 position;

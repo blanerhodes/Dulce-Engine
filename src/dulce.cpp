@@ -128,7 +128,9 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         //.color = COLOR_WHITE,
         //.intensity = 1.0f
     };
-    RendererPushPointLight(renderer_state, point_light);
+    renderer_state->per_frame_constants.light_pos = Vec3ToVec4(point_light_pos, 1.0f);
+    renderer_state->per_frame_constants.light_color = COLOR_WHITEA;
+    //RendererPushPointLight(renderer_state, point_light);
 
     BasicMesh light_plane = {
         .position = point_light.position,
@@ -196,7 +198,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     };
     RendererPushPlane(renderer_state, sky_plane);
 
-
+    RendererCommitConstantFrameMemory(renderer_state->vertex_constant_buffer, &renderer_state->per_frame_constants);
 
     //static u32 frame_count = 0;
     //if (frame_count % 10 == 0) {

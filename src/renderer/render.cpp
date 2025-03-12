@@ -137,7 +137,7 @@ RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_f
 		buffer->slot_addresses[i] = 0;
 		buffer->slot_space_used[i] = 0;
 	}
-	buffer->slot_addresses[0] = buffer->base_address;
+	//buffer->slot_addresses[0] = buffer->base_address;
 	return buffer;
 }
 
@@ -191,7 +191,8 @@ u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32
 }
 
 u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data, u32 size) {
-	u32 result_slot = RendererConstantBufferGetNextFree(buffer, 0, buffer->num_per_frame_slots);
+	//u32 result_slot = RendererConstantBufferGetNextFree(buffer, 0, buffer->num_per_frame_slots);
+	u32 result_slot = 0;
 	DASSERT(result_slot < buffer->max_slots);
 	u32 offset_from_base = RendererConstantBufferCommit(buffer, data, result_slot, size);
 	return offset_from_base;
@@ -545,10 +546,11 @@ void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state,
     Mat4 proj_view = Mat4Mult(projection, view);
     Mat4 world_rotation = Mat4EulerX(DegToRad(-90.0f));
 	Mat4 view_world = Mat4Mult(view, world_rotation);
-    proj_view = Mat4Mult(proj_view, world_rotation);
-    RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, proj_view.data, 0, sizeof(proj_view));
-	Mat4 pv_inv_trans = Mat4Transpose(proj_view);
-	RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, pv_inv_trans.data, 0, sizeof(pv_inv_trans));
+    renderer_state->per_frame_constants.proj_view = Mat4Mult(proj_view, world_rotation);
+	renderer_state->per_frame_constants.norm_transform = Mat4Transpose(proj_view);
+    //RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, proj_view.data, 0, sizeof(proj_view));
+	//Mat4 pv_inv_trans = Mat4Transpose(proj_view);
+	//RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, pv_inv_trans.data, 0, sizeof(pv_inv_trans));
     
     RendererPushClear({ 0.0f, 0.0f, 0.0f });
 }
