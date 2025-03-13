@@ -314,7 +314,9 @@ void RendererPushPlane(RendererState* renderer, BasicMesh plane_data) {
 	RendererCommitIndexMemory(index_buffer, indices, PLANE_NUM_INDICES);
 
 	Mat4 transform = RendererGenBasicMeshTransform(plane_data);
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
+	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
+	PerObjectConstants constants = {transform, inv_trans};
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
 	if (plane_data.texture_id != TexID_NoTexture) {
 		RendererLoadTexture(renderer, plane_data.texture_id);
@@ -396,7 +398,9 @@ void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
 	RendererCommitIndexMemory(index_buffer, indices, CUBE_NUM_INDICES);
 
     Mat4 transform = RendererGenBasicMeshTransform(cube_data);
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
+	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
+	PerObjectConstants constants = {transform, inv_trans};
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
 	if (cube_data.texture_id != TexID_NoTexture) {
 		RendererLoadTexture(renderer, cube_data.texture_id);
@@ -441,7 +445,9 @@ void RendererPushCone(RendererState* renderer, BasicMesh cone) {
 	}
 
     Mat4 transform = RendererGenBasicMeshTransform(cone, false);
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
+	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
+	PerObjectConstants constants = {transform, inv_trans};
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
 	//NOTE: doing this because ArrayCount was causing ull to u32 narrowing warning
 	RenderCommand command = {
@@ -489,7 +495,9 @@ void RendererPushCylinder(RendererState* renderer, BasicMesh cyl) {
 	}
 
     Mat4 transform = RendererGenBasicMeshTransform(cyl, false);
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
+	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
+	PerObjectConstants constants = {transform, inv_trans};
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
 	//NOTE: doing this because ArrayCount was causing ull to u32 narrowing warning
 	RenderCommand command = {
@@ -503,6 +511,106 @@ void RendererPushCylinder(RendererState* renderer, BasicMesh cyl) {
 	};
 	PushRenderCommand(renderer->command_buffer, command);
 
+}
+
+void RendererPushAsset(RendererState* renderer, BasicMesh mesh) {
+	AssetData* asset = AssetHashMapGet(&renderer->loaded_assets, mesh.asset_id);
+	if (!asset) {
+		AssetData new_asset = {.id = mesh.asset_id};
+		LoadDOF(&renderer->permanent_storage, &new_asset, RendererLookupAsset(renderer, mesh.asset_id));
+		asset = AssetHashMapInsert(&renderer->loaded_assets, new_asset);
+	}
+
+	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
+	RendererIndexBuffer* index_buffer = renderer->index_buffer;
+	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+
+	RendererCommitVertexMemory(vertex_buffer, asset->vertices, asset->vertex_count);
+	RendererCommitIndexMemory(index_buffer, asset->indices, asset->index_count);
+
+	Mat4 transform = RendererGenBasicMeshTransform(mesh);
+	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
+	PerObjectConstants constants = {transform, inv_trans};
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
+
+	if (mesh.texture_id != TexID_NoTexture) {
+		RendererLoadTexture(renderer, mesh.texture_id);
+	}
+
+	RenderCommand command = {
+		.vertex_count = asset->vertex_count,
+		.vertex_buffer_offset = vertex_buffer->vertex_count - asset->vertex_count,
+		.index_count = asset->index_count,
+		.index_buffer_offset = index_buffer->index_count - asset->index_count,
+		.vertex_constant_buffer_offset = const_buff_offset,
+		.topology = RenderTopology_TriangleList,
+		.texture_id = mesh.texture_id,
+	};
+	PushRenderCommand(renderer->command_buffer, command);
+}
+
+void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh grid) {
+
+	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
+	RendererIndexBuffer* index_buffer = renderer->index_buffer;
+	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+
+	u32 vertex_count = rows * cols;
+	u32 face_count = (rows-1) * (cols-1) * 2;
+	u32 index_count = face_count * 3;
+
+	f32 half_width = 0.5f * width;
+	f32 half_depth = 0.5f * depth;
+	f32 dx = width / (cols-1);
+	f32 dy = depth / (rows-1);
+	f32 du = 1.0f / (cols-1);
+	f32 dv = 1.0f / (rows-1);
+
+	Vertex* vertices = PushArray(&renderer->scratch_storage, vertex_count, Vertex);
+	for (u32 i = 0; i < rows; i++) {
+		f32 y = half_depth - i*dy;
+		for (u32 j = 0; j < cols; j++) {
+			f32 x = -half_width + j*dx;
+			vertices[i*cols+j].position = {x, y, 0.0f};
+			vertices[i*cols+j].normal = {0.0f, 0.0f, 1.0f};
+			vertices[i*cols+j].color = grid.color;
+			//vertices[i*rows+j].tangent_u = {1.0f, 0.0f, 0.0f};
+			vertices[i*cols+j].tex_coord.x = j*du;
+			vertices[i*cols+j].tex_coord.y = i*dv;
+		}
+	}
+	RendererCommitVertexMemory(vertex_buffer, vertices, vertex_count);
+
+	Index* indices = PushArray(&renderer->scratch_storage, index_count, Index);
+	u32 k = 0;
+	for (u32 i = 0; i < rows-1; i++) {
+		for (u32 j = 0; j < cols-1; j++) {
+			indices[k].value   = i*cols + j;
+			indices[k+1].value = i*cols + j+1;
+			indices[k+2].value = (i+1)*cols + j;
+			indices[k+3].value = (i+1)*cols + j;
+			indices[k+4].value = i*cols + j+1;
+			indices[k+5].value = (i+1)*cols + j+1;
+			k += 6;
+		}
+	}
+	RendererCommitIndexMemory(index_buffer, indices, index_count);
+
+	Mat4 transform = RendererGenBasicMeshTransform(grid, false);
+	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
+	PerObjectConstants constants = {transform, inv_trans};
+	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
+
+	RenderCommand command = {
+		.vertex_count = vertex_count,
+		.vertex_buffer_offset = vertex_buffer->vertex_count - vertex_count,
+		.index_count = index_count,
+		.index_buffer_offset = index_buffer->index_count - index_count,
+		.vertex_constant_buffer_offset = const_buff_offset,
+		.topology = RenderTopology_TriangleList,
+		.texture_id = grid.texture_id
+	};
+	PushRenderCommand(renderer->command_buffer, command);
 }
 
 u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
@@ -547,7 +655,7 @@ void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state,
     Mat4 world_rotation = Mat4EulerX(DegToRad(-90.0f));
 	Mat4 view_world = Mat4Mult(view, world_rotation);
     renderer_state->per_frame_constants.proj_view = Mat4Mult(proj_view, world_rotation);
-	renderer_state->per_frame_constants.norm_transform = Mat4Transpose(proj_view);
+	//renderer_state->per_frame_constants.norm_transform = Mat4Transpose(Mat4Inverse(proj_view));
     //RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, proj_view.data, 0, sizeof(proj_view));
 	//Mat4 pv_inv_trans = Mat4Transpose(proj_view);
 	//RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, pv_inv_trans.data, 0, sizeof(pv_inv_trans));
@@ -641,102 +749,6 @@ void LoadAssetConfig(RendererState* renderer) {
 void RendererInitAssets(RendererState* state, u32 num_slots) {
 	LoadAssetConfig(state);
 	InitAssetHashMap(&state->permanent_storage, &state->loaded_assets, num_slots);
-}
-
-void RendererPushAsset(RendererState* renderer, BasicMesh mesh) {
-	AssetData* asset = AssetHashMapGet(&renderer->loaded_assets, mesh.asset_id);
-	if (!asset) {
-		AssetData new_asset = {.id = mesh.asset_id};
-		LoadDOF(&renderer->permanent_storage, &new_asset, RendererLookupAsset(renderer, mesh.asset_id));
-		asset = AssetHashMapInsert(&renderer->loaded_assets, new_asset);
-	}
-
-	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
-	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
-
-	RendererCommitVertexMemory(vertex_buffer, asset->vertices, asset->vertex_count);
-	RendererCommitIndexMemory(index_buffer, asset->indices, asset->index_count);
-
-	Mat4 transform = RendererGenBasicMeshTransform(mesh);
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
-
-	if (mesh.texture_id != TexID_NoTexture) {
-		RendererLoadTexture(renderer, mesh.texture_id);
-	}
-
-	RenderCommand command = {
-		.vertex_count = asset->vertex_count,
-		.vertex_buffer_offset = vertex_buffer->vertex_count - asset->vertex_count,
-		.index_count = asset->index_count,
-		.index_buffer_offset = index_buffer->index_count - asset->index_count,
-		.vertex_constant_buffer_offset = const_buff_offset,
-		.topology = RenderTopology_TriangleList,
-		.texture_id = mesh.texture_id,
-	};
-	PushRenderCommand(renderer->command_buffer, command);
-}
-
-void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh grid) {
-
-	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
-	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
-
-	u32 vertex_count = rows * cols;
-	u32 face_count = (rows-1) * (cols-1) * 2;
-	u32 index_count = face_count * 3;
-
-	f32 half_width = 0.5f * width;
-	f32 half_depth = 0.5f * depth;
-	f32 dx = width / (cols-1);
-	f32 dy = depth / (rows-1);
-	f32 du = 1.0f / (cols-1);
-	f32 dv = 1.0f / (rows-1);
-
-	Vertex* vertices = PushArray(&renderer->scratch_storage, vertex_count, Vertex);
-	for (u32 i = 0; i < rows; i++) {
-		f32 y = half_depth - i*dy;
-		for (u32 j = 0; j < cols; j++) {
-			f32 x = -half_width + j*dx;
-			vertices[i*cols+j].position = {x, y, 0.0f};
-			vertices[i*cols+j].normal = {0.0f, 0.0f, 1.0f};
-			vertices[i*cols+j].color = grid.color;
-			//vertices[i*rows+j].tangent_u = {1.0f, 0.0f, 0.0f};
-			vertices[i*cols+j].tex_coord.x = j*du;
-			vertices[i*cols+j].tex_coord.y = i*dv;
-		}
-	}
-	RendererCommitVertexMemory(vertex_buffer, vertices, vertex_count);
-
-	Index* indices = PushArray(&renderer->scratch_storage, index_count, Index);
-	u32 k = 0;
-	for (u32 i = 0; i < rows-1; i++) {
-		for (u32 j = 0; j < cols-1; j++) {
-			indices[k].value   = i*cols + j;
-			indices[k+1].value = i*cols + j+1;
-			indices[k+2].value = (i+1)*cols + j;
-			indices[k+3].value = (i+1)*cols + j;
-			indices[k+4].value = i*cols + j+1;
-			indices[k+5].value = (i+1)*cols + j+1;
-			k += 6;
-		}
-	}
-	RendererCommitIndexMemory(index_buffer, indices, index_count);
-
-	Mat4 transform = RendererGenBasicMeshTransform(grid, false);
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, transform.data, sizeof(Mat4));
-
-	RenderCommand command = {
-		.vertex_count = vertex_count,
-		.vertex_buffer_offset = vertex_buffer->vertex_count - vertex_count,
-		.index_count = index_count,
-		.index_buffer_offset = index_buffer->index_count - index_count,
-		.vertex_constant_buffer_offset = const_buff_offset,
-		.topology = RenderTopology_TriangleList,
-		.texture_id = grid.texture_id
-	};
-	PushRenderCommand(renderer->command_buffer, command);
 }
 
 void RendererPushProfilingUI(RendererState* renderer, ThreadContext* thread) {

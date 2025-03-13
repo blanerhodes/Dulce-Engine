@@ -79,6 +79,20 @@ union Mat4 {
 #endif
 };
 
+union Mat3 {
+    alignas(16) f32 data[9];
+#if defined(DUSE_SIMD)
+    alignas(16) Vec3 rows[3];
+#endif
+};
+
+union Mat2 {
+    alignas(16) f32 data[4];
+#if defined(DUSE_SIMD)
+    alignas(16) Vec2 rows[2];
+#endif
+};
+
 struct Vertex3d {
     Vec3 position;
     Vec2 texcoord;
@@ -564,6 +578,14 @@ DINLINE f32 Distance(Vec3 vec0, Vec3 vec1){
     return Length(vec0 - vec1);
 }
 
+DINLINE Vec3 ComputeNormal(Vec3 p0, Vec3 p1, Vec3 p2) {
+    Vec3 u = p1 - p0;
+    Vec3 v = p2 - p0;
+    Vec3 result = CrossProd(u, v);
+    Normalize(&result);
+    return result;
+}
+
 DINLINE Vec4 Vec4Create(f32 x, f32 y, f32 z, f32 w){
     Vec4 result = {};
 #if defined(DUSESIMD)
@@ -924,6 +946,53 @@ DINLINE Mat4 Mat4Inverse(Mat4 Matrix) {
     o[15] = d * ((t22 * m[10] + t16 * m[2] + t21 * m[6]) - (t20 * m[6] + t23 * m[10] + t17 * m[2]));
 
     return result;
+}
+
+DINLINE u32 Mat2Determinant(Mat2 mat) {
+    u32 result = mat.data[0]* mat.data[3] - mat.data[1]*mat.data[2];
+    return result;
+}
+
+DINLINE u32 Mat3Determinant(Mat3 mat) {
+    Mat2 lower_right = {mat.data[4], mat.data[5], mat.data[7], mat.data[8]};
+    Mat2 middle = {mat.data[3], mat.data[5], mat.data[6], mat.data[8]};
+    Mat2 lower_left = {mat.data[3], mat.data[4], mat.data[6], mat.data[7]};
+    u32 result = mat.data[0]*Mat2Determinant(lower_right) - mat.data[1]*Mat2Determinant(middle) + mat.data[2]*Mat2Determinant(lower_left);
+    return result;
+}
+
+DINLINE u32 Mat4Determinant(Mat4 mat) {
+    Mat3 lower_right = {
+        mat.data[5], mat.data[6], mat.data[7],
+        mat.data[9], mat.data[10], mat.data[11],
+        mat.data[13], mat.data[14], mat.data[15]
+    };
+    Mat3 middle_right = {
+        mat.data[4], mat.data[6], mat.data[7],
+        mat.data[8], mat.data[10], mat.data[11],
+        mat.data[12], mat.data[14], mat.data[15]
+    };
+    Mat3 middle_left = {
+        mat.data[4], mat.data[5], mat.data[7],
+        mat.data[8], mat.data[9], mat.data[11],
+        mat.data[12], mat.data[13], mat.data[15]
+    };
+    Mat3 lower_left = {
+        mat.data[4], mat.data[5], mat.data[6],
+        mat.data[8], mat.data[9], mat.data[10],
+        mat.data[12], mat.data[13], mat.data[14]
+    };
+    u32 result = mat.data[0]*Mat3Determinant(lower_right) - mat.data[1]*Mat3Determinant(middle_right) + mat.data[2]*Mat3Determinant(middle_left) - mat.data[3]*Mat3Determinant(lower_left);
+    return result;
+}
+
+DINLINE Mat4 Mat4InverseTranspose(Mat4 mat) {
+    Mat4 result = mat;
+    result.data[3]  = 0;
+    result.data[7]  = 0;
+    result.data[11] = 0;
+
+    return Mat4Transpose(Mat4Inverse(mat)); 
 }
 
 DINLINE Mat4 Mat4Translation(Vec3 pos){

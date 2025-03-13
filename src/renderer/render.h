@@ -163,6 +163,7 @@ struct RendererMemory {
 
 struct PerObjectConstants {
 	Mat4 model_transform;
+	Mat4 inv_trans;
 };
 
 struct PerFrameConstants {
