@@ -14,7 +14,7 @@
 #define COLOR_MAGENTA   {1.0f, 0.0f, 1.0f}
 #define COLOR_YELLOW   {1.0f, 1.0f, 0.0f}
 #define COLOR_GREY	   {0.5f, 0.5f, 0.5f}
-#define COLOR_CYAN	   {0.0f, 0.5f, 0.5f}
+#define COLOR_CYAN	   {0.0f, 1.0f, 1.0f}
 #define COLOR_NO_COLOR {1.0f, 1.0f, 1.0f}
 
 #define COLOR_REDA	    {1.0f, 0.0f, 0.0f, 1.0f}
@@ -25,7 +25,7 @@
 #define COLOR_MAGENTAA   {1.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_YELLOWA   {1.0f, 1.0f, 0.0f, 1.0f}
 #define COLOR_GREYA	    {0.5f, 0.5f, 0.5f, 1.0f}
-#define COLOR_CYANA	    {0.0f, 0.5f, 0.5f, 1.0f}
+#define COLOR_CYANA	    {0.0f, 1.0f, 1.0f, 1.0f}
 #define COLOR_NO_COLORA {1.0f, 1.0f, 1.0f, 1.0f}
 
 enum DefaultColorsU32 {
@@ -166,8 +166,10 @@ struct PerObjectConstants {
 	Mat4 inv_trans;
 };
 
+#include <DirectXMath.h>
 struct PerFrameConstants {
-	Mat4 proj_view;
+	//Mat4 proj_view;
+	DirectX::XMMATRIX transform;
 	Mat4 norm_transform;
 	Vec4 light_pos;
 	Vec4 light_color;

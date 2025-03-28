@@ -35,13 +35,6 @@ struct Material {
 	float4 reflect;
 };
 
-cbuffer cbPerFrame : register(b0) {
-    row_major float4x4 proj_view;
-    row_major float4x4 norm_transform;
-    float4 light_pos;
-    float4 light_color;
-};
-
 //cbuffer cbPerObject {
 //    float4x4 g_world;
 //    float4x4 g_world_inv_transpose;
@@ -56,9 +49,16 @@ cbuffer cbPerFrame : register(b0) {
 //    float3 g_eye_pos_w;
 //};
 
+cbuffer cbPerFrame : register(b0) {
+    float4x4 proj_view;
+    float4x4 norm_transform;
+    float4 light_pos;
+    float4 light_color;
+};
+
 cbuffer cbPerObject : register(b1) {
-   row_major matrix model_transform;
-   row_major matrix inv_trans;
+   float4x4 model_transform;
+   float4x4 inv_trans;
 };
 
 struct VertIn {
@@ -80,10 +80,13 @@ struct VertOut {
 
 VertOut main(VertIn input) {
     //process UI stuff if normal is all 0s
-    float4x4 mvp = mul(proj_view, model_transform);
+    //float4x4 mvp = mul(model_transform, proj_view);
+    //float4x4 mvp = model_transform;
     VertOut output;
     output.normal = mul((float3x3) inv_trans, input.normal);
-    output.position = mul(mvp, float4(input.position, 1.0f));
+    //output.position = mul(mvp, float4(input.position, 1.0f));
+    //output.position = mul(float4(input.position, 1.0f), proj_view);
+    output.position = mul(proj_view, float4(input.position, 1.0f));
     output.frag_pos = output.position; 
     output.color = input.color;
     output.tex_coord = input.tex_coord;

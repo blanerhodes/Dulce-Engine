@@ -6,6 +6,8 @@
 #include "defines.h"
 #include "dmemory.h"
 #include "game_input.h"
+#include "dstring.h"
+#include "dxmath.h"
 //NOTE: allowing only png and bmp right now
 //#define STBI_NO_JPEG
 //#define STBI_NO_PSD
@@ -289,7 +291,7 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 
 
 void RendererPushPlane(RendererState* renderer, BasicMesh plane_data) {
-    f32 radius = 0.5;
+    f32 radius = 1.0f;
 	f32 min_x, min_y, max_x, max_y, near_z;
     min_x = min_y = -radius;
     max_x = max_y = near_z = radius;
@@ -300,10 +302,10 @@ void RendererPushPlane(RendererState* renderer, BasicMesh plane_data) {
 
 #define PLANE_NUM_VERTICES 4
 	Vertex vertices[] = {
-		{ {min_x, min_y, 0}, plane_data.color, {0, 0}, {0.0f, 0.0f, 1.0f} },
-		{ {min_x, max_y, 0}, plane_data.color, {0, 1}, {0.0f, 0.0f, 1.0f} },
-		{ {max_x, max_y, 0}, plane_data.color, {1, 1}, {0.0f, 0.0f, 1.0f} },
-		{ {max_x, min_y, 0}, plane_data.color, {1, 0}, {0.0f, 0.0f, 1.0f} }
+		{ {min_x, min_y, -near_z}, plane_data.color, {0, 0}, {0.0f, 0.0f, 1.0f} },
+		{ {min_x, max_y, -near_z}, plane_data.color, {0, 1}, {0.0f, 0.0f, 1.0f} },
+		{ {max_x, max_y, -near_z}, plane_data.color, {1, 1}, {0.0f, 0.0f, 1.0f} },
+		{ {max_x, min_y, -near_z}, plane_data.color, {1, 0}, {0.0f, 0.0f, 1.0f} }
 	};
 	RendererCommitVertexMemory(vertex_buffer, vertices, PLANE_NUM_VERTICES);
 #define PLANE_NUM_INDICES 6
@@ -340,7 +342,7 @@ void RendererPushPlane(RendererState* renderer, BasicMesh plane_data) {
 //TODO: figure out why brightness on the cube shifts quickly when light is close but gradually when far away
 
 void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
-    f32 default_radius = 0.5;
+    f32 default_radius = 1.0f;
 	f32 min_x, min_y, max_z, max_x, max_y, min_z;
     min_x = min_y = min_z = -default_radius;
     max_x = max_y = max_z = default_radius;
@@ -349,8 +351,24 @@ void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
 	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
-#define CUBE_NUM_VERTICES 24
 	Vertex vertices[] = {
+		//{{-1.0f, -1.0f, -1.0f}, COLOR_WHITE   },
+		//{{-1.0f, +1.0f, -1.0f}, COLOR_BLACK   },
+		//{{+1.0f, +1.0f, -1.0f}, COLOR_RED     },
+		//{{+1.0f, -1.0f, -1.0f}, COLOR_GREEN   },
+		//{{-1.0f, -1.0f, +1.0f}, COLOR_BLUE    },
+		//{{-1.0f, +1.0f, +1.0f}, COLOR_YELLOW  },
+		//{{+1.0f, +1.0f, +1.0f}, COLOR_CYAN    },
+		//{{+1.0f, -1.0f, +1.0f}, COLOR_MAGENTA }
+		{ {-1.0f, -1.0f, -1.0f}, COLOR_RED     },
+		{ { 1.0f, -1.0f, -1.0f}, COLOR_BLUE    },
+		{ {-1.0f,  1.0f, -1.0f}, COLOR_GREEN   },
+		{ { 1.0f,  1.0f, -1.0f}, COLOR_YELLOW  },
+		{ {-1.0f, -1.0f,  1.0f}, COLOR_MAGENTA },
+		{ { 1.0f, -1.0f,  1.0f}, COLOR_CYAN    },
+		{ {-1.0f,  1.0f,  1.0f}, COLOR_BLACK   },
+		{ { 1.0f,  1.0f,  1.0f}, COLOR_WHITE   },
+		/*
 		//near face
 		{{min_x, min_y, min_z}, cube_data.color, {0, 0}, {0, -1, 0}},
 		{{min_x, min_y, max_z}, cube_data.color, {0, 0}, {0, -1, 0}},
@@ -381,21 +399,52 @@ void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
 		{{min_x, min_y, min_z}, cube_data.color, {0, 0}, {0, 0, -1}},
 		{{max_x, min_y, min_z}, cube_data.color, {0, 0}, {0, 0, -1}},
 		{{max_x, max_y, min_z}, cube_data.color, {0, 0}, {0, 0, -1}}
+*/
 	};
 
-	RendererCommitVertexMemory(vertex_buffer, vertices, CUBE_NUM_VERTICES);
+	RendererCommitVertexMemory(vertex_buffer, vertices, ArrayCount(vertices));
 
-#define CUBE_NUM_INDICES 36
 	Index indices[] = {
+		0,2,1, 2,3,1,
+		1,3,5, 3,7,5,
+		2,6,3, 3,6,7,
+		4,5,7, 4,7,6,
+		0,4,2, 2,4,6,
+		0,1,4, 1,5,4 
+		/*
 		 0,  1,  2,  2,  3,  0,
 		 4,  5,  6,  6,  7,  4,
 		 8,  9, 10, 10, 11,  8,
 		12, 13, 14, 14, 15, 12,
 		16, 17, 18, 18, 19, 16,
 		20, 21, 22, 22, 23, 20
+		// front face
+		0, 1, 2,
+		0, 2, 3,
+
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+
+		// bottom face
+		4, 0, 3, 
+		4, 3, 7
+*/
 	};
 
-	RendererCommitIndexMemory(index_buffer, indices, CUBE_NUM_INDICES);
+	RendererCommitIndexMemory(index_buffer, indices, ArrayCount(indices));
 
     Mat4 transform = RendererGenBasicMeshTransform(cube_data);
 	Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
@@ -654,13 +703,13 @@ void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state,
     Mat4 proj_view = Mat4Mult(projection, view);
     Mat4 world_rotation = Mat4EulerX(DegToRad(-90.0f));
 	Mat4 view_world = Mat4Mult(view, world_rotation);
-    renderer_state->per_frame_constants.proj_view = Mat4Mult(proj_view, world_rotation);
+    //renderer_state->per_frame_constants.proj_view = Mat4Mult(proj_view, world_rotation);
 	//renderer_state->per_frame_constants.norm_transform = Mat4Transpose(Mat4Inverse(proj_view));
     //RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, proj_view.data, 0, sizeof(proj_view));
 	//Mat4 pv_inv_trans = Mat4Transpose(proj_view);
 	//RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, pv_inv_trans.data, 0, sizeof(pv_inv_trans));
     
-    RendererPushClear({ 0.0f, 0.0f, 0.0f });
+    RendererPushClear({ 0.5f, 0.5f, 0.5f });
 }
 
 u32 BinarySearch(u32 arr[], u32 size, u32 target) {

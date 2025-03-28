@@ -2,6 +2,8 @@
 
 #include "math.h"
 
+#define USE_DXMATH 1
+
 union Vec2{
     f32 e[2];
     struct{
@@ -829,6 +831,7 @@ DINLINE Mat4 Mat4Orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near
     return result;
 }
 
+#ifndef USE_DXMATH
 DINLINE Mat4 Mat4Perspective(f32 fov_degrees, f32 aspect_ratio, f32 near_clip = 0.1f, f32 far_clip = 100.0f){
     f32 fov_radians = DegToRad(fov_degrees);
     f32 half_tan_fov = dtan(fov_radians * 0.5f);
@@ -841,6 +844,7 @@ DINLINE Mat4 Mat4Perspective(f32 fov_degrees, f32 aspect_ratio, f32 near_clip = 
     result.data[11] = -((2.0f * far_clip * near_clip) / (far_clip - near_clip));
     return result;
 }
+#endif
 
 DINLINE Mat4 Mat4LookAt(Vec3 pos, Vec3 target, Vec3 up){
     Mat4 result = {};

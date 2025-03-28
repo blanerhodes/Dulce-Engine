@@ -109,5 +109,6 @@ float4 main(PixIn input) : SV_Target{
     float diffuse = diffuse_color * diffuse_intensity * attenuation * max(0.0f, dot(light_dir_norm, corrected_normal));
 
     //return tex.Sample(splr, input.tex_coord) * float4(result, input.color.a);
-    return tex.Sample(splr, input.tex_coord) * diffuse;
+    //return tex.Sample(splr, input.tex_coord) * diffuse;
+    return input.color;
 }

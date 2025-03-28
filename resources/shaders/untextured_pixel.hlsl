@@ -24,5 +24,6 @@ float4 main(PixIn input) : SV_Target{
     float attenuation = 100 / (att_const + att_lin * light_distance + att_quad * (light_distance * light_distance));
     float diffuse = diffuse_color * diffuse_intensity * attenuation * max(0.0f, dot(light_dir_norm, corrected_normal));
 
-    return float4(saturate(diffuse + ambient), 1.0f) * input.color;
+    //return float4(saturate(diffuse + ambient), 1.0f) * input.color;
+    return input.color;
 }

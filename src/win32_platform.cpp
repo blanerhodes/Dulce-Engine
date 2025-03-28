@@ -2,6 +2,7 @@
 #include "asserts.h"
 #include "platform_services.h"
 #include "core/logger.cpp"
+#include "core/dmemory.h"
 #include "core/dmemory.cpp"
 #include "core/dstring.cpp"
 #include "win32_platform.h"

@@ -91,7 +91,7 @@ void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
 
     D3D11_RASTERIZER_DESC1 rd_wireframe = {};
     rd_wireframe.FillMode = D3D11_FILL_WIREFRAME;
-    rd_wireframe.CullMode = D3D11_CULL_BACK; 
+    rd_wireframe.CullMode = D3D11_CULL_FRONT; 
     rd_wireframe.FrontCounterClockwise = false;
     rd_wireframe.DepthClipEnable = true;
     g_d3d.device->CreateRasterizerState1(&rd_wireframe, &g_d3d.wireframe_rs);
@@ -296,7 +296,9 @@ void D3DSetPixelShader(PixelShaderType type) {
 }
 
 void D3DRenderCommands(RendererState* renderer) {
-    g_d3d.context->RSSetState(g_d3d.solid_rs);
+    //g_d3d.context->RSSetState(g_d3d.solid_rs);
+    //g_d3d.context->RSSetState(g_d3d.wireframe_rs);
+    g_d3d.context->RSSetState(g_d3d.no_cull_rs);
     D3D11_MAPPED_SUBRESOURCE vertex_map_resource;
     g_d3d.context->Map(g_d3d.vertex_buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &vertex_map_resource);
     MemCopy(renderer->vertex_buffer->base_address, vertex_map_resource.pData, renderer->vertex_buffer->used_memory_size);
@@ -308,6 +310,7 @@ void D3DRenderCommands(RendererState* renderer) {
     g_d3d.context->Unmap(g_d3d.index_buffer, NULL);
 
     u32 frame_section_size = renderer->vertex_constant_buffer->num_per_frame_slots * renderer->vertex_constant_buffer->slot_size;
+    PerFrameConstants test = *((PerFrameConstants*)(renderer->vertex_constant_buffer->base_address)); 
     D3D11_MAPPED_SUBRESOURCE proj_view_map_resource;
     g_d3d.context->Map(g_d3d.proj_view_buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &proj_view_map_resource);
     MemCopy(renderer->vertex_constant_buffer->base_address, proj_view_map_resource.pData, frame_section_size);

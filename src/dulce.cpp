@@ -1,11 +1,14 @@
 #pragma once
 #include "dulce.h"
 #include "dmath.h"
+#include "dxmath.h"
 #include "dinstrinsics.h"
 #include "game_input.h"
 #include "renderer/render.h"
 #include "asserts.h"
 #include "renderer/d3d11/dulce_dx3d11.h"
+#include "renderer/renderer_shape_gen.h"
+#include <DirectXMath.h>
 
 static char* GameControllerKeyIndexToString(GameControllerKeys key) {
     char* result = game_controller_key_strings[key];
@@ -82,6 +85,45 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         point_light_pos.y += 0.1;
     }
 
+
+    BasicMesh plane = {
+        .position = {0.0f, 0.0f, 0.0f},
+        .scale = {1.0f, 1.0f, 1.0f},
+        .rotation_angles = {0, 0, 0},
+        .color = COLOR_CYANA,
+        .texture_id = TexID_NoTexture
+    };
+
+    BasicMesh cube = {
+        .position = {0.0f, 0.0f, 0.0f},
+        .scale = {1.0f, 1.0f, 1.0f},
+        //.rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
+        .color = COLOR_REDA,
+        .texture_id = TexID_NoTexture
+    };
+    f32 x = 0.0f;
+    f32 z = -3.5f;
+    f32 y = 3.5f;
+    //Vec4 cam_pos = {x, y, z, 1.0f};
+    Vec4 cam_pos = {0.0f, 0.0f, 1.0f, 1.0f};
+    Vec4 target = Vec4Zero();
+    Vec4 up = {0.0f, 1.0f, 0.0f, 0.0f};
+    Mat4 view = Mat4LookAt(cam_pos, target, up);
+    Mat4 world = RendererGenBasicMeshTransform(plane);
+    //Mat4 world = Mat4Identity();
+    //Mat4 proj = Mat4Perspective(45.0f, g_d3d.aspect_ratio);
+    DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, 4.0f);
+    DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveLH(1.0f, 1.0f / g_d3d.aspect_ratio, 0.5f, 10.0f);
+    DirectX::XMMATRIX result = DirectX::XMMatrixTranspose(translation * proj);
+    renderer_state->per_frame_constants.transform = result;
+    
+    //renderer_state->per_frame_constants.proj_view = Mat4Mult(Mat4Mult(world, view), proj);
+    //renderer_state->per_frame_constants.proj_view = proj;
+    RendererPushCube(renderer_state, cube);
+    //RendererPushPlane(renderer_state, plane);
+    RendererCommitConstantFrameMemory(renderer_state->vertex_constant_buffer, &renderer_state->per_frame_constants);
+
+    /*
     BasicMesh cube = {
         .position = {0.0f, 2.0f, 2.0f},
         .scale = {1.0f, 1.0f, 1.0f},
@@ -206,7 +248,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     //    DINFO("t_sin: %.4f --- sin(): %.4f\n", game_state->t_sin, dsin(game_state->t_sin));
     //}
     game_state->t_sin += 0.05f;
-    
+    */
     
     return renderer_state;
 }

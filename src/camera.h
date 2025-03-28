@@ -22,6 +22,7 @@ struct Camera {
 	f32 speed;
 	f32 rotation_speed;
 	f32 zoom;
+	Mat4 view;
 };
 
 
@@ -37,3 +38,4 @@ void CameraAdjustPitch(Camera* camera, f32 degrees, f32 dt);
 Mat4 CameraGetViewMatrix(Camera* camera);
 Camera MakeCamera(Vec3 pos, Vec3 world_up, f32 yaw, f32 pitch);
 void CameraUpdate(Camera* camera, GameInput* input);
+void UpdateView(Camera* camera);
