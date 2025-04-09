@@ -49,12 +49,12 @@ struct Material {
 //    float3 g_eye_pos_w;
 //};
 
-cbuffer cbPerFrame : register(b0) {
-    float4x4 proj_view;
-    float4x4 norm_transform;
-    float4 light_pos;
-    float4 light_color;
-};
+//cbuffer cbPerFrame : register(b0) {
+//    float4x4 proj_view;
+//    float4x4 norm_transform;
+//    float4 light_pos;
+//    float4 light_color;
+//};
 
 cbuffer cbPerObject : register(b1) {
    float4x4 model_transform;

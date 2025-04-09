@@ -1,4 +1,4 @@
-cbuffer LightCBuf {
+cbuffer LightCBuf : register(b0) {
     float3 light_pos;
 };
 

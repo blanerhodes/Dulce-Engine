@@ -7,10 +7,10 @@
 #define CAMERA_DEFAULT_YAW              0.0f
 #define CAMERA_DEFAULT_PITCH            0.0f
 #define CAMERA_DEFAULT_SPEED            1.5f
-#define CAMERA_DEFAULT_ROTATION_SPEED   50.0f
+#define CAMERA_DEFAULT_ROTATION_SPEED   0.05f
 #define CAMERA_DEFAULT_ZOOM             45.0f
 #define CAMERA_DEFAULT_WORLD_UP         {0.0f, 1.0f, 0.0f}
-#define CAMERA_DEFAULT_POSITION         {0.0f, 0.0f, -1.0f}
+#define CAMERA_DEFAULT_POSITION         {0.0f, 0.0f, -5.0f}
 
 struct Camera {
 	Vec3 position;
@@ -43,4 +43,5 @@ void CameraAdjustPitch(Camera* camera, f32 degrees, f32 dt);
 DirectX::XMMATRIX CameraGetViewMatrix(Camera* camera);
 Camera MakeCamera(Vec3 pos, Vec3 world_up, f32 yaw, f32 pitch);
 void CameraUpdate(Camera* camera, GameInput* input);
+void CameraUpdateOrbital(Camera* camera, GameInput* input);
 void UpdateView(Camera* camera);

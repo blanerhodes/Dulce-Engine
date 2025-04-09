@@ -225,7 +225,7 @@ void D3DInitSubresources(RendererState* renderer) {
     //TODO: probably going to need an array of shaders to choose from and those D3D specific shaders will be wrapped in a 
     //      renderer agnostic shader struct that will pick the right thing based on the renderer. Same with input layout
     ID3DBlob* tex_pixel_blob;
-    D3DReadFileToBlob(L"./shaders/textured_pixel.cso", &tex_pixel_blob);
+    D3DReadFileToBlob(L"./shaders/phongPS.cso", &tex_pixel_blob);
     g_d3d.device->CreatePixelShader(tex_pixel_blob->GetBufferPointer(),
                                     tex_pixel_blob->GetBufferSize(),
                                     0,
@@ -242,7 +242,7 @@ void D3DInitSubresources(RendererState* renderer) {
 
     ID3DBlob* vert_blob;
     ID3D11VertexShader* vertex_shader = g_d3d.vertex_shader;
-    D3DReadFileToBlob(L"./shaders/textured_vertex.cso", &vert_blob);
+    D3DReadFileToBlob(L"./shaders/phongVS.cso", &vert_blob);
     g_d3d.device->CreateVertexShader(vert_blob->GetBufferPointer(), vert_blob->GetBufferSize(), 0, &vertex_shader);
     g_d3d.context->VSSetShader(vertex_shader, 0, 0);
 

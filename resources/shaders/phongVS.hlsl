@@ -16,10 +16,10 @@ cbuffer cbPerObject : register(b1) {
    float4x4 model_view_proj;
 };
 
-VSOut main(float3 pos : Position, float3 n : Normal) {
+VSOut main(VSIn vin) {
     VSOut vso;
-    vso.world_pos = (float3)mul(float4(pos, 1.0f), model_transform);
-    vso.normal = mul(n, (float3x3)model_transform);
-    vso.pos = mul(float4(pos, 1.0f), model_view_proj);
+    vso.world_pos = (float3)mul(float4(vin.position, 1.0f), model_transform);
+    vso.normal = mul(vin.normal, (float3x3)model_transform);
+    vso.pos = mul(float4(vin.position, 1.0f), model_view_proj);
     return vso;
 }

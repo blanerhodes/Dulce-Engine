@@ -164,7 +164,7 @@ struct RendererMemory {
 
 struct PerObjectConstants {
 	DirectX::XMMATRIX model_transform;
-	//Mat4 inv_trans;
+	DirectX::XMMATRIX mvp;
 };
 
 #include <DirectXMath.h>

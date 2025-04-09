@@ -48,24 +48,16 @@ DINLINE void CameraUpdateVectors(Camera* camera, f32 delta_pitch, f32 delta_yaw)
 }
 
 DINLINE void CameraAdjustYaw(Camera* camera, f32 degrees, f32 dt) {
-	camera->yaw += degrees * dt * camera->rotation_speed;
-	CameraUpdateVectors(camera, 0.0f, degrees * dt * camera->rotation_speed);
+	camera->yaw -= degrees * dt * camera->rotation_speed;
 }
 
 DINLINE void CameraAdjustPitch(Camera* camera, f32 degrees, f32 dt) {
-	degrees *= -1;
 	camera->pitch += degrees * dt * camera->rotation_speed;
 	camera->pitch = DCLAMP(camera->pitch, -89.0f, 89.0f);
-	CameraUpdateVectors(camera, degrees * dt * camera->rotation_speed, 0.0f);
 }
 
 DINLINE DirectX::XMMATRIX CameraGetViewMatrix(Camera* camera) {
-	dx::XMVECTOR pos = dx::XMVector3Transform(
-							dx::XMVectorSet(0.0f, 0.0f, -camera->radius, 0.0f), 
-							dx::XMMatrixRotationRollPitchYaw(DegToRad(camera->phi), -DegToRad(camera->theta), 0.0f)
-						);
-	dx::XMMATRIX lookat = dx::XMMatrixLookAtLH(pos, dx::XMVectorZero(), dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)); 
-	return lookat * dx::XMMatrixRotationRollPitchYaw(DegToRad(camera->pitch), -DegToRad(camera->yaw), 0.0f);
+	return camera->view;
 }
 
 Camera MakeCamera(Vec3 pos, Vec3 world_up, f32 yaw, f32 pitch) {
@@ -91,23 +83,67 @@ DINLINE void CameraUpdate(Camera* camera, GameInput* input) {
 	f32 moved_forward = 0.0f;
 	f32 moved_right = 0.0f;
 	if (controller.move_forward.ended_down) {
-		//CameraMoveForward(camera, input->delta_time);
-		//moved_forward += camera->speed * input->delta_time;
+		moved_forward += camera->speed * input->delta_time;
+	}
+	if (controller.move_backward.ended_down) {
+		moved_forward -= camera->speed * input->delta_time;
+	}
+	if (controller.move_left.ended_down) {
+		moved_right -= camera->speed * input->delta_time;
+	}
+	if (controller.move_right.ended_down) {
+		moved_right += camera->speed * input->delta_time;
+	}
+	if (input->mouse_buttons[MouseButton_Right].ended_down) {
+		CameraAdjustPitch(camera, input->mouse_y_delta, input->delta_time);
+		CameraAdjustYaw(camera, input->mouse_x_delta, input->delta_time);
+	}
+
+	DirectX::XMVECTOR def_forward = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	DirectX::XMVECTOR def_right = DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+
+	DirectX::XMMATRIX cam_rot = DirectX::XMMatrixRotationRollPitchYaw(camera->pitch, camera->yaw, 0.0f);
+	DirectX::XMVECTOR cam_target = DirectX::XMVector3TransformCoord(def_forward, cam_rot);
+	cam_target = DirectX::XMVector3Normalize(cam_target);
+
+	DirectX::XMVECTOR cam_right = DirectX::XMVector3TransformCoord(def_right, cam_rot);
+	DirectX::XMVECTOR cam_forward = DirectX::XMVector3TransformCoord(def_forward, cam_rot);
+	DirectX::XMVECTOR cam_up = DirectX::XMVector3Cross(cam_forward, cam_right);
+
+	DirectX::XMVECTOR cam_pos = DirectX::XMVectorSet(camera->position.x, camera->position.y, camera->position.z, 0.0f);
+	cam_pos += moved_right * cam_right;
+	cam_pos += moved_forward * cam_forward;
+
+	cam_target = cam_pos + cam_target;
+	camera->view = DirectX::XMMatrixLookAtLH(cam_pos, cam_target, cam_up);
+
+	DirectX::XMFLOAT3 pos;
+	DirectX::XMStoreFloat3(&pos, cam_pos);
+	camera->position = {pos.x, pos.y, pos.z};
+	DirectX::XMFLOAT3 front;
+	DirectX::XMStoreFloat3(&front, cam_forward);
+	camera->front = {front.x, front.y, front.z};
+	DirectX::XMFLOAT3 right;
+	DirectX::XMStoreFloat3(&right, cam_right);
+	camera->right = {right.x, right.y, right.z};
+	DirectX::XMFLOAT3 up;
+	DirectX::XMStoreFloat3(&up, cam_up);
+	camera->up = {up.x, up.y, up.z};
+}
+
+
+DINLINE void CameraUpdateOrbital(Camera* camera, GameInput* input) {
+	GameControllerInput controller = input->controllers[0];
+	if (controller.move_forward.ended_down) {
 		camera->phi += camera->rotation_speed * input->delta_time;
 	}
 	if (controller.move_backward.ended_down) {
-		//CameraMoveBackward(camera, input->delta_time);
-		//moved_forward -= camera->speed * input->delta_time;
 		camera->phi -= camera->rotation_speed * input->delta_time;
 	}
 	if (controller.move_left.ended_down) {
-		//CameraMoveLeft(camera, input->delta_time);
-		//moved_right -= camera->speed * input->delta_time;
 		camera->theta -= camera->rotation_speed * input->delta_time;
 	}
 	if (controller.move_right.ended_down) {
-		//CameraMoveRight(camera, input->delta_time);
-		//moved_right += camera->speed * input->delta_time;
 		camera->theta += camera->rotation_speed * input->delta_time;
 	}
 	if (controller.left_alternate.ended_down) {
@@ -116,41 +152,11 @@ DINLINE void CameraUpdate(Camera* camera, GameInput* input) {
 	if (controller.right_alternate.ended_down) {
 		camera->pitch -= camera->rotation_speed * input->delta_time;
 	}
-	if (input->mouse_buttons[MouseButton_Right].ended_down) {
-		//CameraAdjustPitch(camera, input->mouse_y_delta, input->delta_time);
-		//CameraAdjustYaw(camera, input->mouse_x_delta, input->delta_time);
-		//camera->pitch += input->mouse_y_delta * input->delta_time * camera->rotation_speed;
-		//camera->yaw += input->mouse_x_delta * input->delta_time * camera->rotation_speed;
-	}
 
-	//DirectX::XMVECTOR def_forward = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	//DirectX::XMVECTOR def_right = DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-
-	//DirectX::XMMATRIX cam_rot = DirectX::XMMatrixRotationRollPitchYaw(camera->pitch, camera->yaw, 0.0f);
-	//DirectX::XMVECTOR cam_target = DirectX::XMVector3TransformCoord(def_forward, cam_rot);
-	//cam_target = DirectX::XMVector3Normalize(cam_target);
-
-	//DirectX::XMVECTOR cam_right = DirectX::XMVector3TransformCoord(def_right, cam_rot);
-	//DirectX::XMVECTOR cam_forward = DirectX::XMVector3TransformCoord(def_forward, cam_rot);
-	//DirectX::XMVECTOR cam_up = DirectX::XMVector3Cross(cam_forward, cam_right);
-
-	//DirectX::XMVECTOR cam_pos = DirectX::XMVectorSet(camera->position.x, camera->position.y, camera->position.z, 0.0f);
-	//cam_pos += moved_right * cam_right;
-	//cam_pos += moved_forward * cam_forward;
-
-	//cam_target = cam_pos + cam_target;
-	//camera->view = DirectX::XMMatrixLookAtLH(cam_pos, cam_target, cam_up);
-
-	//DirectX::XMFLOAT3 pos;
-	//DirectX::XMStoreFloat3(&pos, cam_pos);
-	//camera->position = {pos.x, pos.y, pos.z};
-	//DirectX::XMFLOAT3 front;
-	//DirectX::XMStoreFloat3(&front, cam_forward);
-	//camera->front = {front.x, front.y, front.z};
-	//DirectX::XMFLOAT3 right;
-	//DirectX::XMStoreFloat3(&right, cam_right);
-	//camera->right = {right.x, right.y, right.z};
-	//DirectX::XMFLOAT3 up;
-	//DirectX::XMStoreFloat3(&up, cam_up);
-	//camera->up = {up.x, up.y, up.z};
+	dx::XMVECTOR pos = dx::XMVector3Transform(
+							dx::XMVectorSet(0.0f, 0.0f, -camera->radius, 0.0f), 
+							dx::XMMatrixRotationRollPitchYaw(DegToRad(camera->phi), -DegToRad(camera->theta), 0.0f)
+						);
+	dx::XMMATRIX lookat = dx::XMMatrixLookAtLH(pos, dx::XMVectorZero(), dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)); 
+	camera->view = lookat * dx::XMMatrixRotationRollPitchYaw(DegToRad(camera->pitch), -DegToRad(camera->yaw), 0.0f);
 }

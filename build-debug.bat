@@ -23,6 +23,9 @@ ECHO Building shaders...
 fxc /Od /Zi /Fd ./bin/debug/shaders/textured_vertex.pdb /T vs_5_0 /Fo ./bin/debug/shaders/textured_vertex.cso ./resources/shaders/textured_vertex.hlsl
 fxc /Od /Zi /Fd ./bin/debug/shaders/textured_pixel.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_pixel.cso ./resources/shaders/textured_pixel.hlsl
 
+fxc /Od /Zi /Fd ./bin/debug/shaders/phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/phongVS.cso ./resources/shaders/phongVS.hlsl
+fxc /Od /Zi /Fd ./bin/debug/shaders/phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/phongPS.cso ./resources/shaders/phongPS.hlsl
+
 REM fxc /Od /Zi /Fd ./bin/debug/shaders/untextured_vertex.pdb /T vs_5_0 /Fo ./bin/debug/shaders/untextured_vertex.cso ./resources/shaders/untextured_vertex.hlsl
 fxc /Od /Zi /Fd ./bin/debug/shaders/untextured_pixel.pdb /T ps_5_0 /Fo ./bin/debug/shaders/untextured_pixel.cso ./resources/shaders/untextured_pixel.hlsl
  

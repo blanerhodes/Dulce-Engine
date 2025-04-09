@@ -97,7 +97,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .color = COLOR_REDA,
         .texture_id = TexID_NoTexture
     };
-    RendererPushCube(renderer_state, cube);
+    RendererPushCubeIndFaces(renderer_state, cube);
 
     BasicMesh cube1 = {
         .position = {0.0f, 0.0f, 5.0f},
@@ -106,8 +106,17 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .color = COLOR_REDA,
         .texture_id = TexID_NoTexture
     };
+    RendererPushCubeIndFaces(renderer_state, cube1);
+
+    BasicMesh light_cube = {
+        .position = {0.0f, 0.0f, 5.0f},
+        .scale = {1.0f, 1.0f, 1.0f},
+        //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
+        .color = COLOR_REDA,
+        .texture_id = TexID_NoTexture
+    };
     //RendererPushCubeIndFaces(renderer_state, cube1);
-    RendererPushCube(renderer_state, cube1);
+    RendererPushCubeIndFaces(renderer_state, light_cube);
 
     BasicMesh plane = {
         .position = {0.0f, 0.0f, 0.0f},

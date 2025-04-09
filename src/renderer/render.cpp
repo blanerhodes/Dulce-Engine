@@ -303,7 +303,6 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 
 DirectX::XMMATRIX ApplyViewProjection(DirectX::XMMATRIX model_transform, RendererState* renderer) {
 	return DirectX::XMMatrixTranspose(model_transform * renderer->view * renderer->projection);
-	//return DirectX::XMMatrixTranspose(model_transform * renderer->projection);
 }
 
 void RendererPushPlane(RendererState* renderer, BasicMesh mesh) {
@@ -450,8 +449,8 @@ void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
 	RendererCommitIndexMemory(index_buffer, indices, ArrayCount(indices));
 
 	DirectX::XMMATRIX transform = DXGenTransform(cube_data, renderer->projection);
-	transform = ApplyViewProjection(transform, renderer);
-	PerObjectConstants constants = {transform};
+	DirectX::XMMATRIX mvp = ApplyViewProjection(transform, renderer);
+	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
 	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
 	if (cube_data.texture_id != TexID_NoTexture) {
@@ -699,21 +698,9 @@ void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state,
     RendererConstantBufferClear(renderer_state->vertex_constant_buffer);
     ArenaReset(&renderer_state->scratch_storage);
 
-    //NOTE: this is assuming the matrix will always be the first thing in the constant buffer
     CameraUpdate(&game_state->camera, input);
 	renderer_state->view = CameraGetViewMatrix(&game_state->camera);	
 
-    //Mat4 projection = Mat4Perspective(45.0f, g_d3d.aspect_ratio);
-    //Mat4 view = CameraGetViewMatrix(&game_state->camera);
-    //Mat4 proj_view = Mat4Mult(projection, view);
-    //Mat4 world_rotation = Mat4EulerX(DegToRad(-90.0f));
-	//Mat4 view_world = Mat4Mult(view, world_rotation);
-    //renderer_state->per_frame_constants.proj_view = Mat4Mult(proj_view, world_rotation);
-	//renderer_state->per_frame_constants.norm_transform = Mat4Transpose(Mat4Inverse(proj_view));
-    //RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, proj_view.data, 0, sizeof(proj_view));
-	//Mat4 pv_inv_trans = Mat4Transpose(proj_view);
-	//RendererConstantBufferCommit(renderer_state->vertex_constant_buffer, pv_inv_trans.data, 0, sizeof(pv_inv_trans));
-    
     RendererPushClear({ 0.5f, 0.5f, 0.5f });
 }
 
