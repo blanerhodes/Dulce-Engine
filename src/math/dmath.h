@@ -4,7 +4,7 @@
 
 #define USE_DXMATH 1
 
-union Vec2{
+union Vec2 {
     f32 e[2];
     struct{
         union{
@@ -16,7 +16,7 @@ union Vec2{
     };
 };
 
-union Vec3{
+union Vec3 {
     f32 e[3];
     struct{
         union{
@@ -31,7 +31,7 @@ union Vec3{
     };
 };
 
-union Vec4{
+union Vec4 {
 #if defined(DUSE_SIMD)
     alignas(16) __m128 data;
 #endif

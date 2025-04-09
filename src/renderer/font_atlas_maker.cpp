@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+/*
 #define STB_RECT_PACK_IMPLEMENTATION
 #include "../vendor/stb/stb_rect_pack.h" // optional, used for better bitmap packing
 
@@ -102,4 +103,4 @@ void BuildFontAtlas(char* ttf_path, char* png_path) {
     // cleanup
     free(ttf_buffer);
     free(bitmap);
-}
+}*/

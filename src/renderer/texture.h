@@ -6,6 +6,7 @@ enum TextureID {
 	TexID_Default,
 	TexID_WhiteTexture,
 	TexID_Sky,
+	TexID_Pic,
 	TexID_Unset
 };
 

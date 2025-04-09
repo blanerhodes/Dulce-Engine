@@ -56,6 +56,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         RendererInitTextureBuffer(renderer_state, TEXTURE_DIM_512);
         RendererInitAssets(renderer_state, 16);
         D3DInitSubresources(renderer_state);
+        renderer_state->projection = DirectX::XMMatrixPerspectiveFovLH(45.0f, 1.0f / g_d3d.aspect_ratio, 0.1f, 100.0f);
 
         renderer_memory->is_initialized = true;
     }
@@ -63,7 +64,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     RendererPerFrameReset(game_state, renderer_state, input);
 
     f32 adjusted_mouse_x = (f32)input->mouse_x / (buffer->width * 0.5f) - 1.0f;
-    f32 adjusted_mouse_y = (f32)input->mouse_y / (buffer->height * 0.5f) - 3.0f;
+    f32 adjusted_mouse_y = -(f32)input->mouse_y / (buffer->height * 0.5f) + 1.0f;
     f32 mouse_scroll = (f32)input->mouse_z;
     static Vec3 point_light_pos = {1.0f, 1.0f, 9.0f};
     if (input->controllers[0].action_0.ended_down) {
@@ -86,6 +87,28 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     }
 
 
+    game_state->t_sin += input->delta_time;
+    RendererPushClear(COLOR_GREY);
+
+    BasicMesh cube = {
+        .position = {0.0f, 0.0f, 0.0f},
+        .scale = {0.5f, 0.5f, 0.5f},
+        .rotation_angles = {0, 0.0f, 45.0f},
+        .color = COLOR_REDA,
+        .texture_id = TexID_NoTexture
+    };
+    RendererPushCube(renderer_state, cube);
+
+    BasicMesh cube1 = {
+        .position = {0.0f, 0.0f, 5.0f},
+        .scale = {1.0f, 1.0f, 1.0f},
+        //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
+        .color = COLOR_REDA,
+        .texture_id = TexID_NoTexture
+    };
+    //RendererPushCubeIndFaces(renderer_state, cube1);
+    RendererPushCube(renderer_state, cube1);
+
     BasicMesh plane = {
         .position = {0.0f, 0.0f, 0.0f},
         .scale = {1.0f, 1.0f, 1.0f},
@@ -93,35 +116,14 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .color = COLOR_CYANA,
         .texture_id = TexID_NoTexture
     };
+    //RendererPushPlane(renderer_state, plane);
 
-    BasicMesh cube = {
-        .position = {0.0f, 0.0f, 0.0f},
-        .scale = {1.0f, 1.0f, 1.0f},
-        //.rotation_angles = {0, game_state->t_sin*0.2f, game_state->t_sin*0.2f},
-        .color = COLOR_REDA,
-        .texture_id = TexID_NoTexture
-    };
-    f32 x = 0.0f;
-    f32 z = -3.5f;
-    f32 y = 3.5f;
-    //Vec4 cam_pos = {x, y, z, 1.0f};
-    Vec4 cam_pos = {0.0f, 0.0f, 1.0f, 1.0f};
-    Vec4 target = Vec4Zero();
-    Vec4 up = {0.0f, 1.0f, 0.0f, 0.0f};
-    Mat4 view = Mat4LookAt(cam_pos, target, up);
-    Mat4 world = RendererGenBasicMeshTransform(plane);
-    //Mat4 world = Mat4Identity();
-    //Mat4 proj = Mat4Perspective(45.0f, g_d3d.aspect_ratio);
-    DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(0.0f, 0.0f, 4.0f);
-    DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveLH(1.0f, 1.0f / g_d3d.aspect_ratio, 0.5f, 10.0f);
-    DirectX::XMMATRIX result = DirectX::XMMatrixTranspose(translation * proj);
-    renderer_state->per_frame_constants.transform = result;
     
     //renderer_state->per_frame_constants.proj_view = Mat4Mult(Mat4Mult(world, view), proj);
     //renderer_state->per_frame_constants.proj_view = proj;
-    RendererPushCube(renderer_state, cube);
+    //RendererPushCube(renderer_state, cube);
     //RendererPushPlane(renderer_state, plane);
-    RendererCommitConstantFrameMemory(renderer_state->vertex_constant_buffer, &renderer_state->per_frame_constants);
+    //RendererCommitConstantFrameMemory(renderer_state->vertex_constant_buffer, &renderer_state->per_frame_constants);
 
     /*
     BasicMesh cube = {

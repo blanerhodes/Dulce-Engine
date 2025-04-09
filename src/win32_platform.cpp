@@ -6,15 +6,27 @@
 #include "core/dmemory.cpp"
 #include "core/dstring.cpp"
 #include "win32_platform.h"
+
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "vendor/imgui/imconfig.h"
+#include "vendor/imgui/imgui_internal.h"
+#include "vendor/imgui/imgui_impl_win32.cpp"
+#include "vendor/imgui/imgui_impl_dx11.cpp"
+#include "vendor/imgui/imgui_demo.cpp"
+#include "vendor/imgui/imgui_draw.cpp"
+#include "vendor/imgui/imgui_tables.cpp"
+#include "vendor/imgui/imgui_widgets.cpp"
+#include "vendor/imgui/imgui.cpp"
+
 #include "renderer/d3d11/dulce_dx3d11.h"
 #include "game_input.h"
 #include "camera.cpp"
 #include "renderer/render.cpp"
+
+
 #include "renderer/d3d11/dulce_dx3d11.cpp"
 #include "dulce.cpp"
-#include "renderer/font_atlas_maker.cpp"
 #include <windows.h>
-#include <ShellScalingApi.h>
 
 static b8 g_running;
 static b8 g_pause;
@@ -199,6 +211,12 @@ static void Win32ProcessPendingMessages(GameControllerInput* keyboard_controller
                     }
                 }
             } break;
+            case WM_MOUSEMOVE:
+            case WM_LBUTTONDOWN: {
+                POINTS pt = MAKEPOINTS(message.lParam);
+                new_input->mouse_x = pt.x;
+                new_input->mouse_y = pt.y;
+            } break;
             case WM_MOUSEWHEEL: {
                 i32 delta = GET_WHEEL_DELTA_WPARAM(message.wParam) / WHEEL_DELTA;
                 new_input->mouse_z += delta;
@@ -249,6 +267,9 @@ static void Win32PresentToWindow(HDC device_context, RendererState* renderer_dat
 }
 
 static LRESULT CALLBACK Win32MainWindowCallback(HWND window, UINT message, WPARAM w_param, LPARAM l_param) {       
+    if (ImGui_ImplWin32_WndProcHandler(window, message, w_param, l_param)) {
+        return true;
+    }
     LRESULT result = 0;
     switch(message) {
         case WM_ACTIVATEAPP: {
@@ -311,29 +332,36 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
         return 1;
     }
 
-    u32 client_width = 960;
-    u32 client_height = 540;
-    u32 window_width = client_width;
-    u32 window_height = client_height;
+    u32 client_width = 1280;
+    u32 client_height = 720;
+    RECT win_rect;
+    win_rect.left = 300;
+    win_rect.right = win_rect.left + client_width;
+    win_rect.top = 300;
+    win_rect.bottom = win_rect.top + client_height;
 
     u32 window_ex_style = WS_EX_APPWINDOW;
     u32 window_style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-    RECT border_rect = {};
-    AdjustWindowRectEx(&border_rect, window_style, 0, window_ex_style);
-
-    window_width += border_rect.right - border_rect.left + 20;
-    window_height += border_rect.bottom - border_rect.top + 20;
+    AdjustWindowRectEx(&win_rect, window_style, 0, window_ex_style);
 
     HWND window = CreateWindowExA(window_ex_style, wc.lpszClassName, "Dulce", window_style,
-                                  CW_USEDEFAULT, CW_USEDEFAULT, window_width, window_height,
+                                  CW_USEDEFAULT, CW_USEDEFAULT,
+                                  win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
                                   NULL, NULL, instance, NULL);
     if (!window) {
         MessageBoxA(0, "Failed to create window", "Error", MB_ICONEXCLAMATION | MB_OK);
         return 1;
     }
 
+    ShowWindow(window, SW_SHOWDEFAULT);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplWin32_Init(window);
+
     g_window_dc = GetDC(window);
-    //g_opengl_rc = Win32InitOpenGl(g_window_dc);
 
     Direct3d d3d = {};
     InitDirect3D(window, client_width, client_height);
@@ -411,7 +439,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
     char* font_ttf_path = "../../resources/assets/cour.ttf";
     char* font_png_path = "../../resources/assets/cour.png";
     if (!PlatformFileExists(font_png_path)) {
-        BuildFontAtlas(font_ttf_path, font_png_path);
+        //BuildFontAtlas(font_ttf_path, font_png_path);
     }
 
     LARGE_INTEGER last_counter = GetWallClock();
@@ -423,11 +451,11 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
     while (g_running) {
         new_input->delta_time = target_seconds_per_frame;
 
-        POINT mouse_pos;
-        GetCursorPos(&mouse_pos);
-        ScreenToClient(window, &mouse_pos);
-        new_input->mouse_x = mouse_pos.x;
-        new_input->mouse_y = mouse_pos.y;
+        //POINT mouse_pos;
+        //GetCursorPos(&mouse_pos);
+        //ScreenToClient(window, &mouse_pos);
+        //new_input->mouse_x = mouse_pos.x;
+        //new_input->mouse_y = mouse_pos.y;
         new_input->mouse_x_delta = new_input->mouse_x - old_input->mouse_x;
         new_input->mouse_y_delta = new_input->mouse_y - old_input->mouse_y;
 

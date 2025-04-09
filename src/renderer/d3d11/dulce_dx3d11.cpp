@@ -5,6 +5,9 @@
 #include "defines.h"
 #include "../render.h"
 #include "asserts.h"
+#include "../../vendor/imgui/imgui.h"
+#include "../../vendor/imgui/imgui_impl_win32.h"
+#include "../../vendor/imgui/imgui_impl_dx11.h"
 
 enum RenderGeometryOffset {
     GeoOffset_Cube,
@@ -56,8 +59,8 @@ void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     g_d3d.dxgi_adapter->GetParent(__uuidof(IDXGIFactory2), (void**)&g_d3d.dxgi_factory);
 
     DXGI_SWAP_CHAIN_DESC1 swapchain_desc = {};
-    swapchain_desc.Width = view_width;
-    swapchain_desc.Height = view_height;
+    swapchain_desc.Width = 0;
+    swapchain_desc.Height = 0;
     swapchain_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     swapchain_desc.Stereo = FALSE;
     swapchain_desc.SampleDesc.Count = 1;
@@ -71,16 +74,44 @@ void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     swapchain_desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     swapchain_desc.Flags = 0;
 
-    g_d3d.dxgi_factory->CreateSwapChainForHwnd(g_d3d.device, hwnd, &swapchain_desc, 0, 0, &g_d3d.swap_chain);
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreen_desc = {
+        .RefreshRate = {
+            .Numerator = 0,
+            .Denominator = 0
+        },
+        .ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED,
+        .Scaling = DXGI_MODE_SCALING_UNSPECIFIED,
+        .Windowed = true
+    };
+
+    g_d3d.dxgi_factory->CreateSwapChainForHwnd(g_d3d.device, hwnd, &swapchain_desc, &fullscreen_desc, 0, &g_d3d.swap_chain);
     g_d3d.swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&g_d3d.frame_buffer);
     g_d3d.device->CreateRenderTargetView(g_d3d.frame_buffer, 0, &g_d3d.frame_buffer_view);
 
-    D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
-    g_d3d.frame_buffer->GetDesc(&depth_buffer_desc); //copy from framebuffer properties
-    depth_buffer_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depth_buffer_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    D3D11_TEXTURE2D_DESC depth_buffer_desc = {
+        .Width = view_width,
+        .Height = view_height,
+        .MipLevels = 1,
+        .ArraySize = 1,
+        .Format = DXGI_FORMAT_D32_FLOAT,
+        .SampleDesc = {
+            .Count = 1,
+            .Quality = 0
+        },
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_DEPTH_STENCIL
+    };
+
     g_d3d.device->CreateTexture2D(&depth_buffer_desc, 0, &g_d3d.depth_buffer);
-    g_d3d.device->CreateDepthStencilView(g_d3d.depth_buffer, 0, &g_d3d.depth_buffer_view);
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsv_desc = {
+        .Format = DXGI_FORMAT_D32_FLOAT,
+        .ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D,
+        .Texture2D = {
+            .MipSlice = 0
+        }
+    };
+    g_d3d.device->CreateDepthStencilView(g_d3d.depth_buffer, &dsv_desc, &g_d3d.depth_buffer_view);
 
     D3D11_RASTERIZER_DESC1 rd_solid = {};
     rd_solid.FillMode = D3D11_FILL_SOLID;
@@ -103,14 +134,14 @@ void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
     rd_no_cull.DepthClipEnable = true;
     g_d3d.device->CreateRasterizerState1(&rd_no_cull, &g_d3d.no_cull_rs);
 
-
     D3D11_SAMPLER_DESC sampler_desc = {};
-    sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    //sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     g_d3d.device->CreateSamplerState(&sampler_desc, &g_d3d.sampler);
+    D3DBindSampler();
 
     D3D11_DEPTH_STENCIL_DESC depth_stencil_desc = {};
     depth_stencil_desc.DepthEnable = TRUE;
@@ -120,16 +151,26 @@ void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height) {
 
     g_d3d.view_width = view_width;
     g_d3d.view_height = view_height;
-    g_d3d.aspect_ratio = (f32)view_width / (f32)view_height;
+    g_d3d.aspect_ratio = (f32)view_height / (f32)view_width;
 
     g_d3d.context->OMSetRenderTargets(1, &g_d3d.frame_buffer_view, g_d3d.depth_buffer_view);
     g_d3d.context->OMSetDepthStencilState(g_d3d.depth_stencil_state, 0);
     g_d3d.context->OMSetBlendState(0, 0, 0xFFFFFFFF); //NOTE: default blend mode
 
-    g_d3d.viewport = {0.0f, 0.0f, (f32)depth_buffer_desc.Width, (f32)depth_buffer_desc.Height, 0.0f, 1.0f};
+    g_d3d.viewport = {
+        .TopLeftX = 0,
+        .TopLeftY = 0,
+        .Width = (f32)depth_buffer_desc.Width,
+        .Height = (f32)depth_buffer_desc.Height,
+        .MinDepth = 0,
+        .MaxDepth = 1
+    };
     g_d3d.context->RSSetViewports(1, &g_d3d.viewport);
 
+    ImGui_ImplDX11_Init(g_d3d.device, g_d3d.context);
+
     g_d3d.next_free_tex_slot = 0;
+
 }
 
 void D3DClearBuffer(f32 red, f32 green, f32 blue) {
@@ -189,14 +230,15 @@ void D3DInitSubresources(RendererState* renderer) {
                                     tex_pixel_blob->GetBufferSize(),
                                     0,
                                     &g_d3d.pixel_shaders[PixelShaderType_Textured]);
-
-    ID3DBlob* untex_pixel_blob;
-    ID3D11PixelShader* untex_pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Untextured];
-    D3DReadFileToBlob(L"./shaders/untextured_pixel.cso", &untex_pixel_blob);
-    g_d3d.device->CreatePixelShader(untex_pixel_blob->GetBufferPointer(),
-                                    untex_pixel_blob->GetBufferSize(),
-                                    0,
-                                    &g_d3d.pixel_shaders[PixelShaderType_Untextured]);
+    ID3D11PixelShader* pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Textured];
+    g_d3d.context->PSSetShader(pixel_shader, 0, 0);
+    //ID3DBlob* untex_pixel_blob;
+    //ID3D11PixelShader* untex_pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Untextured];
+    //D3DReadFileToBlob(L"./shaders/untextured_pixel.cso", &untex_pixel_blob);
+    //g_d3d.device->CreatePixelShader(untex_pixel_blob->GetBufferPointer(),
+    //                                untex_pixel_blob->GetBufferSize(),
+    //                                0,
+    //                                &g_d3d.pixel_shaders[PixelShaderType_Untextured]);
 
     ID3DBlob* vert_blob;
     ID3D11VertexShader* vertex_shader = g_d3d.vertex_shader;
@@ -231,20 +273,20 @@ void D3DInitSubresources(RendererState* renderer) {
 
     ID3D11InputLayout* input_layout;
     D3D11_INPUT_ELEMENT_DESC input_desc[] = {
-        {"POS", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                            0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"COL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEX", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NOR", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                            0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"Color", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
     g_d3d.device->CreateInputLayout(input_desc, ArrayCount(input_desc), vert_blob->GetBufferPointer(), vert_blob->GetBufferSize(), &input_layout);
     g_d3d.context->IASetInputLayout(input_layout);
 }
 
-void D3DCreateTextureResource(Texture* texture, u32 dimension) {
+void D3DCreateTextureResource(Texture* texture, u32 width, u32 height) {
     g_d3d.textures_2d[g_d3d.next_free_tex_slot].id = texture->id;
     D3D11_TEXTURE2D_DESC tex_desc = {
-        .Width = dimension,
-        .Height = dimension,
+        .Width = width,
+        .Height = height,
         .MipLevels = 1,
         .ArraySize = 1,
         .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -259,7 +301,7 @@ void D3DCreateTextureResource(Texture* texture, u32 dimension) {
     };
     D3D11_SUBRESOURCE_DATA sub_data = {
         .pSysMem = texture->data,
-        .SysMemPitch = dimension*4 //sizeof(u32)
+        .SysMemPitch = width * sizeof(u32)
     };
     g_d3d.device->CreateTexture2D(&tex_desc, &sub_data, &g_d3d.textures_2d[g_d3d.next_free_tex_slot].texture);
 
@@ -274,7 +316,13 @@ void D3DCreateTextureResource(Texture* texture, u32 dimension) {
     g_d3d.device->CreateShaderResourceView(g_d3d.textures_2d[g_d3d.next_free_tex_slot].texture, &srv_desc, &g_d3d.textures_2d[g_d3d.next_free_tex_slot].shader_view);
     g_d3d.next_free_tex_slot++;
     DASSERT(g_d3d.next_free_tex_slot < ArrayCount(g_d3d.textures_2d));
+
 }
+
+void D3DCreateTextureResource(Texture* texture, u32 dimension) {
+    D3DCreateTextureResource(texture, dimension, dimension);
+}
+
 
 void D3DBindTexture(u32 tex_id) {
     for (u32 i = 0; i < ArrayCount(g_d3d.textures_2d); i++) {
@@ -329,21 +377,33 @@ void D3DRenderCommands(RendererState* renderer) {
     for (RenderCommand* command = (RenderCommand*)command_buffer->base_address; (u8*)command < command_buffer->base_address + command_buffer->used_memory_size; command++) {
         u32 offset = command->vertex_constant_buffer_offset/sizeof(Vec4);
 
-        if (command->texture_id == TexID_NoTexture) {
-            if (g_d3d.bound_pixel_shader != PixelShaderType_Untextured) {
-                D3DSetPixelShader(PixelShaderType_Untextured);
-            }
-        }
-        else {
-            D3DBindTexture(command->texture_id);
+        //if (command->texture_id == TexID_NoTexture) {
+        //    if (g_d3d.bound_pixel_shader != PixelShaderType_Untextured) {
+        //        D3DSetPixelShader(PixelShaderType_Untextured);
+        //    }
+        //}
+        //else {
+            //D3DBindTexture(command->texture_id);
             if (g_d3d.bound_pixel_shader != PixelShaderType_Textured) {
                 D3DSetPixelShader(PixelShaderType_Textured);
             }
-        }
+            g_d3d.context->PSSetShaderResources(0, 1, &g_d3d.textures_2d[0].shader_view);
+        //}
 
         g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.constant_buffer, &offset, &num_constants);
         g_d3d.context->IASetPrimitiveTopology(D3DGetTopology(command->topology));
         g_d3d.context->DrawIndexed(command->index_count, command->index_buffer_offset, command->vertex_buffer_offset);
+
+        //ImGui_ImplDX11_NewFrame();
+        //ImGui_ImplWin32_NewFrame();
+        //ImGui::NewFrame();
+
+        //static bool show_demo_window = true;
+        //if (show_demo_window) {
+        //    ImGui::ShowDemoWindow(&show_demo_window);
+        //}
+        //ImGui::Render();
+        //ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     }
 }
 

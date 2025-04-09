@@ -729,7 +729,7 @@ typedef unsigned char validate_uint32[sizeof(stbi__uint32)==4 ? 1 : -1];
 static int stbi__cpuid3(void)
 {
     int info[4];
-    __cpuid(info,1);
+    __cpuid(1, info[0], info[1], info[2], info[3]);
     return info[3];
 }
 #else

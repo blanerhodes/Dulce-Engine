@@ -5,6 +5,7 @@
 #include "dmemory.h"
 #include "game_input.h"
 #include "dulce.h"
+#include <DirectXMath.h>
 
 #define COLOR_RED	   {1.0f, 0.0f, 0.0f}
 #define COLOR_GREEN	   {0.0f, 1.0f, 0.0f}
@@ -162,8 +163,8 @@ struct RendererMemory {
 };
 
 struct PerObjectConstants {
-	Mat4 model_transform;
-	Mat4 inv_trans;
+	DirectX::XMMATRIX model_transform;
+	//Mat4 inv_trans;
 };
 
 #include <DirectXMath.h>
@@ -192,6 +193,9 @@ struct RendererState {
 	AssetHashMap loaded_assets;
 
 	PerFrameConstants per_frame_constants;
+
+	DirectX::XMMATRIX view;
+	DirectX::XMMATRIX projection;
 };
 
 struct BasicMesh {
@@ -292,6 +296,7 @@ void RendererResetTextureBuffer(RendererTextureBuffer* texture_buffer);
 u32 RendererLoadTexture(RendererState* renderer, u32 texture_id);
 
 void RendererPushPlane(RendererState* renderer, BasicMesh plane_data);
+void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh cube_data);
 void RendererPushCube(RendererState* renderer, BasicMesh cube_data);
 void RendererPushCone(RendererState* renderer, BasicMesh cone);
 

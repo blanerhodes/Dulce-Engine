@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "render.h"
 #include "dmath.h"
+#include "d3d11/dulce_dx3d11.h"
 
 /*TODO----------------------
  - remove duplicate vertices from cylinder generation since they can share normals between faces
@@ -9,17 +10,40 @@
  - change cone normal generation to point directly out from cone center instead of the face
 */
 
+DirectX::XMMATRIX DXGenTransform(BasicMesh mesh, RendererState* renderer) {
+	DirectX::XMMATRIX result = 
+							DirectX::XMMatrixRotationRollPitchYaw(mesh.rotation_angles.x, mesh.rotation_angles.y, mesh.rotation_angles.z) *
+							DirectX::XMMatrixTranslation(mesh.position.x, mesh.position.y, mesh.position.z) *
+							DirectX::XMMatrixScaling(g_d3d.aspect_ratio, 1.0f, 1.0f);
+	return result;
+}
+
+DirectX::XMMATRIX DXGenTransform(BasicMesh mesh, DirectX::XMMATRIX proj) {
+	DirectX::XMMATRIX result = 
+							DirectX::XMMatrixScaling(mesh.scale.x, mesh.scale.y, mesh.scale.z) *
+							DirectX::XMMatrixRotationRollPitchYaw(mesh.rotation_angles.x, mesh.rotation_angles.y, mesh.rotation_angles.z) *
+							DirectX::XMMatrixTranslation(mesh.position.x, mesh.position.y, mesh.position.z);
+	return result;
+}
+
 Mat4 RendererGenBasicMeshTransform(BasicMesh mesh, b32 mult_with_scale = true) {
     Mat4 trans_to_true_pos = Mat4Translation(mesh.position);
     Mat4 rotate = Mat4EulerXyz(mesh.rotation_angles.x, mesh.rotation_angles.y, mesh.rotation_angles.z);
 
     Mat4 transform = Mat4Identity();
-	if (mult_with_scale) {
-		Mat4 scale = Mat4Scale(mesh.scale);
-		transform = Mat4Mult(scale, transform);
-	}
-    transform = Mat4Mult(rotate, transform);
-    transform = Mat4Mult(trans_to_true_pos, transform);
+	f32 c = dcos(mesh.rotation_angles.z);
+	f32 s = dsin(mesh.rotation_angles.z);
+	f32 ar = 720.0f / 1280.0f;
+	transform.data[0] = c * ar;
+	transform.data[1] = s; 
+	transform.data[4] = -s * ar;
+	transform.data[5] = c;
+	//if (mult_with_scale) {
+	//	Mat4 scale = Mat4Scale(mesh.scale);
+	//	transform = Mat4Mult(scale, transform);
+	//}
+ //   transform = Mat4Mult(rotate, transform);
+    //transform = Mat4Mult(trans_to_true_pos, transform);
 
 	return transform;
 }

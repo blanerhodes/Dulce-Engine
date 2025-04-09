@@ -5,6 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/src/**",
                 "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/vendor/imgui",
+                "${workspaceFolder}/src/vendor/stb",
                 "${workspaceFolder}/src/math",
                 "${workspaceFolder}/src/renderer",
                 "${workspaceFolder}/src/renderer/d3d11",

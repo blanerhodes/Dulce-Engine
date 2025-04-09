@@ -56,3 +56,5 @@ static Direct3d g_d3d;
 void InitDirect3D(HWND hwnd, u32 view_width, u32 view_height);
 void D3DInitSubresources(RendererState* renderer);
 void D3DRenderCommands(RendererState* renderer);
+void D3DBindSampler();
+void D3DCreateTextureResource(Texture* tex, u32 width, u32 height);
