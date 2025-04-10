@@ -2,13 +2,13 @@ cbuffer LightCBuf : register(b0) {
     float3 light_pos;
 };
 
-float3 mat_color = {0.7f, 0.7f, 0.9f};
-float3 ambient = {0.15f, 0.15f, 0.15f};
-float3 diffuse_color = {1.0f, 1.0f, 1.0f};
-float diffuse_intensity = 1.0f;
-float att_const = 1.0f;
-float att_lin = 0.045f;
-float att_quad = 0.0075f;
+static float3 mat_color = {0.7f, 0.7f, 0.9f};
+static float3 ambient = {0.15f, 0.15f, 0.15f};
+static float3 diffuse_color = {1.0f, 1.0f, 1.0f};
+static float diffuse_intensity = 1.0f;
+static float att_const = 1.0f;
+static float att_lin = 0.045f;
+static float att_quad = 0.0075f;
 
 float4 main(float3 world_pos : Position, float3 n : Normal) : SV_Target {
     float3 v_tol = light_pos - world_pos;

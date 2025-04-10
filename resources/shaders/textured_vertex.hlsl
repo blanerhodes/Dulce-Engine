@@ -35,26 +35,6 @@ struct Material {
 	float4 reflect;
 };
 
-//cbuffer cbPerObject {
-//    float4x4 g_world;
-//    float4x4 g_world_inv_transpose;
-//    float4x4 g_world_view_proj;
-//    Material g_material;
-//};
-//
-//cbuffer cbPerFrame : register(b2) {
-//    DirectionalLight g_dir_light;
-//    PointLight g_point_light;
-//    SpotLight g_spot_light;
-//    float3 g_eye_pos_w;
-//};
-
-//cbuffer cbPerFrame : register(b0) {
-//    float4x4 proj_view;
-//    float4x4 norm_transform;
-//    float4 light_pos;
-//    float4 light_color;
-//};
 
 cbuffer cbPerObject : register(b1) {
    float4x4 model_transform;

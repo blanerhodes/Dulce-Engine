@@ -66,7 +66,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     f32 adjusted_mouse_x = (f32)input->mouse_x / (buffer->width * 0.5f) - 1.0f;
     f32 adjusted_mouse_y = -(f32)input->mouse_y / (buffer->height * 0.5f) + 1.0f;
     f32 mouse_scroll = (f32)input->mouse_z;
-    static Vec3 point_light_pos = {1.0f, 1.0f, 9.0f};
+    static Vec3 point_light_pos = {0.0f, 0.0f, 0.0f};
     if (input->controllers[0].action_0.ended_down) {
         point_light_pos.z += 0.1;
     }
@@ -91,7 +91,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     RendererPushClear(COLOR_GREY);
 
     BasicMesh cube = {
-        .position = {0.0f, 0.0f, 0.0f},
+        .position = {2.0f, 0.0f, 3.0f},
         .scale = {0.5f, 0.5f, 0.5f},
         .rotation_angles = {0, 0.0f, 45.0f},
         .color = COLOR_REDA,
@@ -100,7 +100,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     RendererPushCubeIndFaces(renderer_state, cube);
 
     BasicMesh cube1 = {
-        .position = {0.0f, 0.0f, 5.0f},
+        .position = {-1.0f, 1.0f, 5.0f},
         .scale = {1.0f, 1.0f, 1.0f},
         //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
         .color = COLOR_REDA,
@@ -109,7 +109,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     RendererPushCubeIndFaces(renderer_state, cube1);
 
     BasicMesh light_cube = {
-        .position = {0.0f, 0.0f, 5.0f},
+        .position = {point_light_pos},
         .scale = {1.0f, 1.0f, 1.0f},
         //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
         .color = COLOR_REDA,
@@ -118,20 +118,11 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     //RendererPushCubeIndFaces(renderer_state, cube1);
     RendererPushCubeIndFaces(renderer_state, light_cube);
 
-    BasicMesh plane = {
-        .position = {0.0f, 0.0f, 0.0f},
-        .scale = {1.0f, 1.0f, 1.0f},
-        .rotation_angles = {0, 0, 0},
-        .color = COLOR_CYANA,
-        .texture_id = TexID_NoTexture
+    PointLight point_light = {
+        .position = renderer_state->per_frame_constants.point_light.position
     };
-    //RendererPushPlane(renderer_state, plane);
+    RendererPushPointLight(renderer_state, point_light);
 
-    
-    //renderer_state->per_frame_constants.proj_view = Mat4Mult(Mat4Mult(world, view), proj);
-    //renderer_state->per_frame_constants.proj_view = proj;
-    //RendererPushCube(renderer_state, cube);
-    //RendererPushPlane(renderer_state, plane);
     //RendererCommitConstantFrameMemory(renderer_state->vertex_constant_buffer, &renderer_state->per_frame_constants);
 
     /*

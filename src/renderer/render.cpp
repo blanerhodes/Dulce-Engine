@@ -396,9 +396,9 @@ void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh cube_data) {
 
 	RendererCommitIndexMemory(index_buffer, indices, ArrayCount(indices));
 
-	DirectX::XMMATRIX transform = DXGenTransform(cube_data, renderer);
-	//transform = ApplyViewProjection(transform, renderer);
-	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform)};
+	DirectX::XMMATRIX transform = DXGenTransform(cube_data, renderer->projection);
+	DirectX::XMMATRIX mvp = ApplyViewProjection(transform, renderer);
+	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
 	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
 	if (cube_data.texture_id != TexID_NoTexture) {
@@ -676,13 +676,9 @@ u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
 
 //NOTE: this is hardcoding a point light to be in slot 0 of the constant buffer
 void RendererPushPointLight(RendererState* renderer, PointLight light) {
-	Vec4 pos = {light.position.x, light.position.y, light.position.z, 1.0f};
-	//Vec4 color = {light.color.r, light.color.g, light.color.b, light.intensity};
-	RendererConstantBufferCommit(renderer->vertex_constant_buffer, &pos, 0, sizeof(pos));
-	//RendererConstantBufferCommit(renderer->vertex_constant_buffer, &color, 0, sizeof(color));
+	RendererCommitConstantFrameMemory(renderer->vertex_constant_buffer, &light, sizeof(PointLight));
 }
 
-//TODO: make this renderer agnostic
 void RendererPushClear(Vec3 color) {
 	Vec4 color4 = {color.r, color.g, color.b, 1.0f};
     g_d3d.context->ClearRenderTargetView(g_d3d.frame_buffer_view, (f32*)&color4);

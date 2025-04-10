@@ -162,19 +162,21 @@ struct RendererMemory {
 	void* scratch_storage;
 };
 
+struct PointLight {
+	Vec3 position;
+	f32 pad;
+};
+
 struct PerObjectConstants {
 	DirectX::XMMATRIX model_transform;
 	DirectX::XMMATRIX mvp;
 };
 
-#include <DirectXMath.h>
 struct PerFrameConstants {
-	//Mat4 proj_view;
-	DirectX::XMMATRIX transform;
-	Mat4 norm_transform;
-	Vec4 light_pos;
-	Vec4 light_color;
+	PointLight point_light;
 };
+
+#include <DirectXMath.h>
 
 struct RendererState {
 	MemoryArena permanent_storage;
@@ -205,16 +207,7 @@ struct BasicMesh {
 	Vec4 color;
 	i32 texture_id;
 	AssetID asset_id;
-
 };
-
-//TODO: have parameter on lights to say how far their light will reach
-//struct PointLight {
-//	Vec3 position;
-//	Vec3 color;
-//	f32 intensity;
-//};
-
 
 //struct DirectionalLight {
 //	Vec3 position;
@@ -224,15 +217,6 @@ struct BasicMesh {
 //	f32 intensity;
 //};
 
-struct PointLight {
-	Vec4 ambient;
-	Vec4 diffuse;
-	Vec4 specular;
-	Vec3 position;
-	f32 range;
-	Vec3 attenuation;
-	f32 pad;
-};
 
 struct DirectionalLight {
 	Vec4 ambient;

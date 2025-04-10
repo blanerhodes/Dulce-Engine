@@ -138,9 +138,12 @@ static void Win32ProcessKeyboardMessage(GameButtonState* new_state, b32 is_down)
     }
 }
 
-static void Win32ProcessPendingMessages(GameControllerInput* keyboard_controller) {
+static void Win32ProcessPendingMessages(GameControllerInput* keyboard_controller, HWND window) {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE)) {
+        if (ImGui_ImplWin32_WndProcHandler(window, message.message, message.wParam, message.lParam)) {
+            return;
+        }
         switch(message.message) {
             case WM_QUIT:{
                 g_running = false;
@@ -267,9 +270,6 @@ static void Win32PresentToWindow(HDC device_context, RendererState* renderer_dat
 }
 
 static LRESULT CALLBACK Win32MainWindowCallback(HWND window, UINT message, WPARAM w_param, LPARAM l_param) {       
-    if (ImGui_ImplWin32_WndProcHandler(window, message, w_param, l_param)) {
-        return true;
-    }
     LRESULT result = 0;
     switch(message) {
         case WM_ACTIVATEAPP: {
@@ -485,7 +485,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
         }
 
         //process input
-        Win32ProcessPendingMessages(new_keyboard_controller);
+        Win32ProcessPendingMessages(new_keyboard_controller, window);
 
         GameFrameBuffer frame_buffer = {};
         frame_buffer.memory = g_back_buffer.memory;

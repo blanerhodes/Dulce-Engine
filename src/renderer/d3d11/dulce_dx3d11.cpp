@@ -372,7 +372,8 @@ void D3DRenderCommands(RendererState* renderer) {
 
     u32 num_constants = 16;
     u32 proj_view_offset = 0;
-    g_d3d.context->VSSetConstantBuffers1(0, 1, &g_d3d.proj_view_buffer, &proj_view_offset, &num_constants);
+    g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.proj_view_buffer, &proj_view_offset, &num_constants);
+    g_d3d.context->PSSetConstantBuffers(0, 1, &g_d3d.proj_view_buffer);
     RendererCommandBuffer* command_buffer = renderer->command_buffer;
     for (RenderCommand* command = (RenderCommand*)command_buffer->base_address; (u8*)command < command_buffer->base_address + command_buffer->used_memory_size; command++) {
         u32 offset = command->vertex_constant_buffer_offset/sizeof(Vec4);
@@ -394,16 +395,25 @@ void D3DRenderCommands(RendererState* renderer) {
         g_d3d.context->IASetPrimitiveTopology(D3DGetTopology(command->topology));
         g_d3d.context->DrawIndexed(command->index_count, command->index_buffer_offset, command->vertex_buffer_offset);
 
-        //ImGui_ImplDX11_NewFrame();
-        //ImGui_ImplWin32_NewFrame();
-        //ImGui::NewFrame();
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
 
-        //static bool show_demo_window = true;
-        //if (show_demo_window) {
-        //    ImGui::ShowDemoWindow(&show_demo_window);
-        //}
-        //ImGui::Render();
-        //ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        static bool show_demo_window = false;
+        if (show_demo_window) {
+            ImGui::ShowDemoWindow(&show_demo_window);
+        }
+
+        if (ImGui::Begin("Light Movement")) {
+            ImGui::SliderFloat("X", &renderer->per_frame_constants.point_light.position.x, -60.0f, 60.0f, "%.1f");
+            ImGui::SliderFloat("Y", &renderer->per_frame_constants.point_light.position.y, -60.0f, 60.0f, "%.1f");
+            ImGui::SliderFloat("Z", &renderer->per_frame_constants.point_light.position.z, -60.0f, 60.0f, "%.1f");
+        }
+        ImGui::End();
+
+
+        ImGui::Render();
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     }
 }
 
