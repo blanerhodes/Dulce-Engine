@@ -163,8 +163,14 @@ struct RendererMemory {
 };
 
 struct PointLight {
-	Vec3 position;
-	f32 pad;
+	alignas(16) Vec3 position;
+	alignas(16) Vec3 mat_color;
+	alignas(16) Vec3 ambient;
+	alignas(16) Vec3 diffuse_color;
+	f32 diffuse_intensity;
+	f32 att_const;
+	f32 att_lin;
+	f32 att_quad;
 };
 
 struct PerObjectConstants {
@@ -289,7 +295,7 @@ void RendererPushCylinder(RendererState* renderer, BasicMesh cyl);
 void RendererPushAsset(RendererState* renderer, BasicMesh mesh);
 void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh grid);
 
-void RendererPushPointLight(RendererState* renderer, PointLight light);
+void RendererPushPointLight(RendererState* renderer);
 void RendererPushClear(Vec3 color);
 
 void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state, GameInput* input);

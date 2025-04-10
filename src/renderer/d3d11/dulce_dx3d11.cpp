@@ -405,9 +405,21 @@ void D3DRenderCommands(RendererState* renderer) {
         }
 
         if (ImGui::Begin("Light Movement")) {
-            ImGui::SliderFloat("X", &renderer->per_frame_constants.point_light.position.x, -60.0f, 60.0f, "%.1f");
-            ImGui::SliderFloat("Y", &renderer->per_frame_constants.point_light.position.y, -60.0f, 60.0f, "%.1f");
-            ImGui::SliderFloat("Z", &renderer->per_frame_constants.point_light.position.z, -60.0f, 60.0f, "%.1f");
+            PointLight* light = &renderer->per_frame_constants.point_light;
+            ImGui::SliderFloat("X", &light->position.x, -60.0f, 60.0f, "%.1f");
+            ImGui::SliderFloat("Y", &light->position.y, -60.0f, 60.0f, "%.1f");
+            ImGui::SliderFloat("Z", &light->position.z, -60.0f, 60.0f, "%.1f");
+
+            ImGui::Text("Intensity/Color");
+            ImGui::SliderFloat("Intensity", &light->diffuse_intensity, 0.01, 2.0f, "%.1f");
+            ImGui::ColorEdit3("Diffuse Color", &light->diffuse_color.x);
+            ImGui::ColorEdit3("Ambient", &light->ambient.x);
+            ImGui::ColorEdit3("Material", &light->mat_color.x);
+
+            ImGui::Text("Falloff");
+            ImGui::SliderFloat("Constant", &light->att_const, 0.05f, 10.0f, "%.2f");
+            ImGui::SliderFloat("Linear", &light->att_lin, 0.0001f, 4.0f, "%.4f");
+            ImGui::SliderFloat("Quadratic", &light->att_quad, 0.0000001f, 10.0f, "%.2f");
         }
         ImGui::End();
 

@@ -675,8 +675,8 @@ u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
 
 
 //NOTE: this is hardcoding a point light to be in slot 0 of the constant buffer
-void RendererPushPointLight(RendererState* renderer, PointLight light) {
-	RendererCommitConstantFrameMemory(renderer->vertex_constant_buffer, &light, sizeof(PointLight));
+void RendererPushPointLight(RendererState* renderer) {
+	RendererCommitConstantFrameMemory(renderer->vertex_constant_buffer, &renderer->per_frame_constants, sizeof(PointLight));
 }
 
 void RendererPushClear(Vec3 color) {

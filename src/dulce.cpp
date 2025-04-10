@@ -58,6 +58,17 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         D3DInitSubresources(renderer_state);
         renderer_state->projection = DirectX::XMMatrixPerspectiveFovLH(45.0f, 1.0f / g_d3d.aspect_ratio, 0.1f, 100.0f);
 
+        renderer_state->per_frame_constants.point_light = {
+            .position = {0.0f, 0.0f, 0.0f},
+            .mat_color = {0.7f, 0.7f, 0.9f},
+            .ambient = {0.05f, 0.05f, 0.05f},
+            .diffuse_color = {1.0f, 1.0f, 1.0f},
+            .diffuse_intensity = 1.0f,
+            .att_const = 1.0f,
+            .att_lin = 0.045f,
+            .att_quad = 0.0075f
+        };
+
         renderer_memory->is_initialized = true;
     }
 
@@ -102,15 +113,15 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     BasicMesh cube1 = {
         .position = {-1.0f, 1.0f, 5.0f},
         .scale = {1.0f, 1.0f, 1.0f},
-        //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
+        .rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
         .color = COLOR_REDA,
         .texture_id = TexID_NoTexture
     };
     RendererPushCubeIndFaces(renderer_state, cube1);
 
     BasicMesh light_cube = {
-        .position = {point_light_pos},
-        .scale = {1.0f, 1.0f, 1.0f},
+        .position = {renderer_state->per_frame_constants.point_light.position},
+        .scale = {0.25f, 0.25f, 0.25f},
         //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
         .color = COLOR_REDA,
         .texture_id = TexID_NoTexture
@@ -118,10 +129,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     //RendererPushCubeIndFaces(renderer_state, cube1);
     RendererPushCubeIndFaces(renderer_state, light_cube);
 
-    PointLight point_light = {
-        .position = renderer_state->per_frame_constants.point_light.position
-    };
-    RendererPushPointLight(renderer_state, point_light);
+    RendererPushPointLight(renderer_state);
 
     //RendererCommitConstantFrameMemory(renderer_state->vertex_constant_buffer, &renderer_state->per_frame_constants);
 

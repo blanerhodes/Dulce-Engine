@@ -1,20 +1,27 @@
 cbuffer LightCBuf : register(b0) {
     float3 light_pos;
+    float3 mat_color;
+    float3 ambient;
+    float3 diffuse_color;
+    float diffuse_intensity;
+    float att_const;
+    float att_lin;
+    float att_quad;
 };
 
-static float3 mat_color = {0.7f, 0.7f, 0.9f};
-static float3 ambient = {0.15f, 0.15f, 0.15f};
-static float3 diffuse_color = {1.0f, 1.0f, 1.0f};
-static float diffuse_intensity = 1.0f;
-static float att_const = 1.0f;
-static float att_lin = 0.045f;
-static float att_quad = 0.0075f;
+struct PSIn {
+    float3 world_pos : Position;
+    float3 color : Color;
+    float3 normal : Normal;
+    float4 pos : SV_Position;
+};
 
-float4 main(float3 world_pos : Position, float3 n : Normal) : SV_Target {
-    float3 v_tol = light_pos - world_pos;
+
+float4 main(PSIn pin) : SV_Target {
+    float3 v_tol = light_pos - pin.world_pos;
     float dist_tol = length(v_tol);
     float3 dir_tol = v_tol / dist_tol;
     float att = 1.0f / (att_const + att_lin * dist_tol + att_quad * (dist_tol * dist_tol));
-    float3 diffuse = diffuse_color * diffuse_intensity * att * max(0.0f, dot(dir_tol, n));
-    return float4(saturate(diffuse + ambient), 1.0f);
+    float3 diffuse = diffuse_color * diffuse_intensity * att * max(0.0f, dot(dir_tol, pin.normal));
+    return float4(saturate((diffuse + ambient) * pin.color), 1.0f);
 }
