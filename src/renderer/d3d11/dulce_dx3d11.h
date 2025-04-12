@@ -35,11 +35,12 @@ struct Direct3d {
 
     ID3D11Buffer* vertex_buffer;
     ID3D11Buffer* index_buffer;
-    ID3D11Buffer* constant_buffer;
-    ID3D11Buffer* proj_view_buffer;
+    ID3D11Buffer* vs_obj_cb;
+    ID3D11Buffer* vs_frame_cb;
+    ID3D11Buffer* ps_frame_cb;
     
-    ID3D11VertexShader* vertex_shader;
-    ID3D11PixelShader* pixel_shaders[2];
+    ID3D11VertexShader* vertex_shaders[PixelShaderType_MAX];
+    ID3D11PixelShader* pixel_shaders[PixelShaderType_MAX];
     PixelShaderType bound_pixel_shader;
     
     u32 next_free_tex_slot;

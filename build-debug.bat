@@ -19,6 +19,34 @@ clang++ -std=c++20 %cFilenames% %compilerFlags% -o ./bin/debug/%assembly%.exe %d
 ECHO Successfully built debug %assembly%
 
 ECHO Building shaders...
+
+REM SET bin_file=phongVS.cso
+REM SET src_file=phongVS.hlsl
+SET shader_bin_dir=.\bin\debug\shaders\
+SET shader_src_dir=.\resources\shaders\
+
+REM SET /a src_newer=0
+REM xcopy /L /D /Y %shader_src_dir%%src_file% %shader_bin_dir%%bin_file%|findstr /B /C:"1 " >nul && set /a src_newer=1 >nul
+
+
+REM ECHO Before loop
+REM FOR /F %%i IN (%shader_src_dir%) do (
+REM     ECHO In loop
+REM     SET file_name=%%~ni
+REM     SET /A src_newer=0
+REM     xcopy /L /D /Y %shader_src_dir%!file_name!.hlsl %shader_bin_dir%!file_name!.cso|findstr /B /C:"1 " >nul && set /A src_newer=1 >nul
+REM     if %src_newer%==1 ( 
+REM         ECHO SRC is newer
+REM         ECHO.!src_file! | findstr /C:"VS" 1>nul
+REM         if errorlevel 0 (
+REM             ECHO SRC is vertex
+REM             fxc /Od /Zi /Fd %shader_bin_dir%!file_name!.pdb /T vs_5_0 /Fo %shader_bin_dir%!file_name!.cso %shader_src_dir%!file_name!.hlsl
+REM         ) else (
+REM             ECHO SRC is pixel
+REM             fxc /Od /Zi /Fd %shader_bin_dir%!file_name!.pdb /T ps_5_0 /Fo %shader_bin_dir%!file_name!.cso %shader_src_dir%!file_name!.hlsl
+REM         )
+REM     ) 
+REM )
  
 REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_vertex.pdb /T vs_5_0 /Fo ./bin/debug/shaders/textured_vertex.cso ./resources/shaders/textured_vertex.hlsl
 REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_pixel.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_pixel.cso ./resources/shaders/textured_pixel.hlsl
@@ -26,7 +54,5 @@ REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_pixel.pdb /T ps_5_0 /Fo ./bin/d
 fxc /Od /Zi /Fd ./bin/debug/shaders/phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/phongVS.cso ./resources/shaders/phongVS.hlsl
 fxc /Od /Zi /Fd ./bin/debug/shaders/phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/phongPS.cso ./resources/shaders/phongPS.hlsl
 
-REM fxc /Od /Zi /Fd ./bin/debug/shaders/untextured_vertex.pdb /T vs_5_0 /Fo ./bin/debug/shaders/untextured_vertex.cso ./resources/shaders/untextured_vertex.hlsl
-REM fxc /Od /Zi /Fd ./bin/debug/shaders/untextured_pixel.pdb /T ps_5_0 /Fo ./bin/debug/shaders/untextured_pixel.cso ./resources/shaders/untextured_pixel.hlsl
  
 ECHO Successfully built shaders

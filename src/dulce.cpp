@@ -45,20 +45,19 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         u32 command_buffer_size = MegaBytes(2) + sizeof(RendererCommandBuffer);
         u32 vertex_buffer_size = MegaBytes(2) + sizeof(RendererVertexBuffer);
         u32 index_buffer_size = MegaBytes(2) + sizeof(RendererIndexBuffer); 
-        u32 vertex_constant_buffer_size = MAX_UNIFORM_BUFFER_SLOTS * UNIFORM_BUFFER_SLOT_SIZE + sizeof(RendererConstantBuffer);
         u32 texture_buffer_size = sizeof(RendererTextureBuffer) + MAX_TEXTURE_SLOTS * TEXTURE_DIM_512 * TEXTURE_DIM_512 * sizeof(u32); //this is about 4MB
         u32 asset_buffer_size = KiloBytes(1);
 
         RendererInitCommandBuffer(renderer_state, command_buffer_size);
         RendererInitVertexBuffer(renderer_state, vertex_buffer_size);
         RendererInitIndexBuffer(renderer_state, index_buffer_size);
-        RendererInitConstantBuffer(renderer_state);
+        RendererInitConstantBuffers(renderer_state, 32, sizeof(PerObjectConstants), 1, sizeof(VSPerFrameConstants), 1, sizeof(PSPerFrameConstants));
         RendererInitTextureBuffer(renderer_state, TEXTURE_DIM_512);
         RendererInitAssets(renderer_state, 16);
         D3DInitSubresources(renderer_state);
         renderer_state->projection = DirectX::XMMatrixPerspectiveFovLH(45.0f, 1.0f / g_d3d.aspect_ratio, 0.1f, 100.0f);
 
-        renderer_state->per_frame_constants.point_light = {
+        renderer_state->ps_pfc.point_light = {
             .position = {0.0f, 0.0f, 0.0f},
             .mat_color = {0.7f, 0.7f, 0.9f},
             .ambient = {0.05f, 0.05f, 0.05f},
@@ -120,7 +119,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     RendererPushCubeIndFaces(renderer_state, cube1);
 
     BasicMesh light_cube = {
-        .position = {renderer_state->per_frame_constants.point_light.position},
+        .position = {renderer_state->ps_pfc.point_light.position},
         .scale = {0.25f, 0.25f, 0.25f},
         //.rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
         .color = COLOR_REDA,

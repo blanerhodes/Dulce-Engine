@@ -12,22 +12,24 @@
 #define COLOR_BLUE	   {0.0f, 0.0f, 1.0f}
 #define COLOR_WHITE	   {1.0f, 1.0f, 1.0f}
 #define COLOR_BLACK	   {0.0f, 0.0f, 0.0f}
-#define COLOR_MAGENTA   {1.0f, 0.0f, 1.0f}
+#define COLOR_MAGENTA  {1.0f, 0.0f, 1.0f}
 #define COLOR_YELLOW   {1.0f, 1.0f, 0.0f}
 #define COLOR_GREY	   {0.5f, 0.5f, 0.5f}
 #define COLOR_CYAN	   {0.0f, 1.0f, 1.0f}
-#define COLOR_NO_COLOR {1.0f, 1.0f, 1.0f}
+//#define COLOR_NO_COLOR {1.0f, 1.0f, 1.0f}
+#define COLOR_NO_COLOR {0.0f, 0.0f, 0.0f}
 
 #define COLOR_REDA	    {1.0f, 0.0f, 0.0f, 1.0f}
 #define COLOR_GREENA    {0.0f, 1.0f, 0.0f, 1.0f}
 #define COLOR_BLUEA	    {0.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_WHITEA	{1.0f, 1.0f, 1.0f, 1.0f}
 #define COLOR_BLACKA	{0.0f, 0.0f, 0.0f, 1.0f}
-#define COLOR_MAGENTAA   {1.0f, 0.0f, 1.0f, 1.0f}
+#define COLOR_MAGENTAA  {1.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_YELLOWA   {1.0f, 1.0f, 0.0f, 1.0f}
 #define COLOR_GREYA	    {0.5f, 0.5f, 0.5f, 1.0f}
 #define COLOR_CYANA	    {0.0f, 1.0f, 1.0f, 1.0f}
-#define COLOR_NO_COLORA {1.0f, 1.0f, 1.0f, 1.0f}
+//#define COLOR_NO_COLORA {1.0f, 1.0f, 1.0f, 1.0f}
+#define COLOR_NO_COLORA {0.0f, 0.0f, 0.0f, 0.0f}
 
 enum DefaultColorsU32 {
 	DefaultColors_Red     = (255<<24) | (255<<16) | (0<<8)   | 0,
@@ -50,7 +52,8 @@ enum RenderTopology {
 
 enum PixelShaderType {
 	PixelShaderType_Textured,
-	PixelShaderType_Untextured,
+	PixelShaderType_Phong,
+	PixelShaderType_MAX
 };
 
 #pragma pack(push, 4)
@@ -136,22 +139,14 @@ struct RendererScratchBuffer {
 };
 
 
-//TODO: find out later if i need to have an array of pointers to the different slots and maintain a free list
-//NOTE: not sure if this should be backed by its own pool allocator
-//NOTE: POOL ALLOC DOESNT WORK because i need random access, an idea maybe something like a SlottedBuffer??
-//      if i find another use case for this kind of thing i may break some of this out to a SlottedBuffer (basically a pool with random access)
 #define MAX_UNIFORM_BUFFER_SLOTS 16
 #define UNIFORM_BUFFER_SLOT_SIZE 256
 struct RendererConstantBuffer {
 	u8* base_address;
 	u32 max_slots;
 	u32 slot_size;
-	u32 per_frame_slots_used;
-	u32 per_object_slots_used;
-	u32 num_per_frame_slots;
-	u32 num_per_object_slots;
+	u32 slots_used;
 	u8* slot_addresses[MAX_UNIFORM_BUFFER_SLOTS];
-	u32 slot_space_used[MAX_UNIFORM_BUFFER_SLOTS];
 };
 
 struct RendererMemory {
@@ -176,9 +171,15 @@ struct PointLight {
 struct PerObjectConstants {
 	DirectX::XMMATRIX model_transform;
 	DirectX::XMMATRIX mvp;
+	DirectX::XMMATRIX pad0;
+	DirectX::XMMATRIX pad1;
 };
 
-struct PerFrameConstants {
+struct VSPerFrameConstants {
+	Vec4 pad;
+};
+
+struct PSPerFrameConstants {
 	PointLight point_light;
 };
 
@@ -189,7 +190,9 @@ struct RendererState {
 	RendererCommandBuffer* command_buffer;
 	RendererVertexBuffer* vertex_buffer;
 	RendererIndexBuffer* index_buffer;
-	RendererConstantBuffer* vertex_constant_buffer;
+	RendererConstantBuffer* vs_obj_constant_buffer;
+	RendererConstantBuffer* vs_frame_constant_buffer;
+	RendererConstantBuffer* ps_frame_constant_buffer;
 	RendererTextureBuffer* texture_buffer;
 
 	MemoryArena scratch_storage;
@@ -200,7 +203,8 @@ struct RendererState {
 	AssetLookup* assets_table;
 	AssetHashMap loaded_assets;
 
-	PerFrameConstants per_frame_constants;
+	PSPerFrameConstants ps_pfc;
+	VSPerFrameConstants vs_pfc;
 
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
@@ -271,13 +275,16 @@ void RendererInitIndexBuffer(RendererState* state, u32 buffer_size);
 void RendererResetIndexBuffer(RendererIndexBuffer* buffer);
 void RendererCommitIndexMemory(RendererIndexBuffer* buffer, void* data, u32 count);
 
-RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_frame_slots = 1);
-void RendererInitConstantBuffer(RendererState* state, u32 per_frame_slots = 1);
+RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena);
+void RendererInitConstantBuffers(RendererState* state, u32 vs_obj_slot_count, 
+									u32 vs_obj_slot_size, u32 vs_frame_slot_count, 
+									u32 vs_frame_slot_size, u32 ps_frame_slot_count, 
+									u32 ps_frame_slot_size);
 void RendererConstantBufferClear(RendererConstantBuffer* buffer);
-u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer, u32 start_index = 0, u32 end_index = 0);
-u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32 slot, u32 size = 0);
-u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data, u32 size = 0);
-u32 RendererCommitConstantObjectMemory(RendererConstantBuffer* buffer, void* data, u32 size = 0);
+u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data);
+u32 RendererCommitConstantVSObjectMemory(RendererState* state, void* data);
+u32 RendererCommitConstantVSFrameMemory(RendererState* state, void* data);
+u32 RendererCommitConstantPSFrameMemory(RendererState* state, void* data);
 
 void RendererInitTextureIdTable(RendererState* renderer);
 RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim dimension);

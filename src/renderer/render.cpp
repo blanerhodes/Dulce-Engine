@@ -123,89 +123,64 @@ void RendererCommitIndexMemory(RendererIndexBuffer* buffer, void* data, u32 coun
 	}
 }
 
-//NOTE: this is forcing per frame data do be in front section and per object data to follow after that
-RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 per_frame_slots) {
-	u32 buffer_size = MAX_UNIFORM_BUFFER_SLOTS * UNIFORM_BUFFER_SLOT_SIZE;
+RendererConstantBuffer* RendererInitConstantBuffer(MemoryArena* arena, u32 slot_count, u32 slot_size) {
+	u32 buffer_size = slot_count * slot_size;
 	RendererConstantBuffer* buffer = PushStruct(arena, RendererConstantBuffer);
 	buffer->base_address = PushSize(arena, buffer_size);
-	buffer->max_slots = MAX_UNIFORM_BUFFER_SLOTS;
-	buffer->slot_size = UNIFORM_BUFFER_SLOT_SIZE;
-	buffer->num_per_frame_slots = per_frame_slots;
-	buffer->num_per_object_slots = buffer->max_slots - per_frame_slots;
-	buffer->per_frame_slots_used = 0;
-	buffer->per_object_slots_used = 0;
+	buffer->max_slots = slot_count;
+	buffer->slot_size = slot_size;
+	buffer->slots_used = 0;
 	u32 slot_index = 0;
 	for (u32 i = 0; i < buffer->max_slots; i++) {
 		buffer->slot_addresses[i] = 0;
-		buffer->slot_space_used[i] = 0;
 	}
-	//buffer->slot_addresses[0] = buffer->base_address;
 	return buffer;
 }
 
-void RendererInitConstantBuffer(RendererState* state, u32 per_frame_slots) {
-	state->vertex_constant_buffer = RendererInitConstantBuffer(&state->permanent_storage, per_frame_slots);
+void RendererInitConstantBuffers(RendererState* state, u32 vs_obj_slot_count, 
+									u32 vs_obj_slot_size, u32 vs_frame_slot_count, 
+									u32 vs_frame_slot_size, u32 ps_frame_slot_count, 
+									u32 ps_frame_slot_size) {
+
+	state->vs_obj_constant_buffer = RendererInitConstantBuffer(&state->permanent_storage, vs_obj_slot_count, vs_obj_slot_size);
+	state->vs_frame_constant_buffer = RendererInitConstantBuffer(&state->permanent_storage, vs_frame_slot_count, vs_frame_slot_size);
+	state->ps_frame_constant_buffer = RendererInitConstantBuffer(&state->permanent_storage, ps_frame_slot_count, ps_frame_slot_size);
 }
 
 void RendererConstantBufferClear(RendererConstantBuffer* buffer) {
-	buffer->per_frame_slots_used = 0;
-	buffer->per_object_slots_used = 0;
+	buffer->slots_used = 0;
 	for (u32 i = 0; i < buffer->max_slots; i++) {
 		buffer->slot_addresses[i] = 0;
-		buffer->slot_space_used[i] = 0;
 	}
-	buffer->slot_addresses[0] = buffer->base_address;
 }
 
-u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer, u32 start_index, u32 end_index) {
-	end_index = (end_index == 0) ? buffer->max_slots : end_index;
-	for (u32 i = start_index; i < end_index; i++) {
+u32 RendererConstantBufferGetNextFree(RendererConstantBuffer* buffer) {
+	for (u32 i = 0; i < buffer->max_slots; i++) {
 		if (buffer->slot_addresses[i] == 0) {
 			return i;
 		}
 	}
+	INVALID_CODE_PATH
 	return buffer->max_slots; //NOTE: need to make dealing with a full constant buffer more robust
 }
 
-u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data, u32 slot, u32 size) {
-	DASSERT(slot < buffer->max_slots);
-	if (buffer->slot_addresses[slot] == 0) {
-		DASSERT(size <= buffer->slot_size);
-		buffer->slot_addresses[slot] = buffer->base_address + slot*buffer->slot_size;
-		MemCopy(data, buffer->slot_addresses[slot], size);
-		buffer->slot_space_used[slot] += size;
-		if (slot > buffer->num_per_frame_slots) {
-			buffer->per_object_slots_used++;
-		} 
-	} else {
-		if (size == 0) {
-			MemCopy(data, buffer->slot_addresses[slot], buffer->slot_size);
-			buffer->slot_space_used[slot] = buffer->slot_size;
-		} else {
-			DASSERT(size <= buffer->slot_size - buffer->slot_space_used[slot]);
-			u8* write_pos = buffer->slot_addresses[slot] + buffer->slot_space_used[slot];
-			MemCopy(data, write_pos, size);
-			buffer->slot_space_used[slot] += size;
-		}
-	}
-
+u32 RendererConstantBufferCommit(RendererConstantBuffer* buffer, void* data) {
+	u32 slot = RendererConstantBufferGetNextFree(buffer);
+	buffer->slot_addresses[slot] = buffer->base_address + slot*buffer->slot_size;
+	MemCopy(data, buffer->slot_addresses[slot], buffer->slot_size);
 	return slot * buffer->slot_size;
 }
 
-u32 RendererCommitConstantFrameMemory(RendererConstantBuffer* buffer, void* data, u32 size) {
-	//u32 result_slot = RendererConstantBufferGetNextFree(buffer, 0, buffer->num_per_frame_slots);
-	u32 result_slot = 0;
-	DASSERT(result_slot < buffer->max_slots);
-	u32 offset_from_base = RendererConstantBufferCommit(buffer, data, result_slot, size);
-	return offset_from_base;
+u32 RendererCommitConstantVSObjectMemory(RendererState* state, void* data) {
+	return RendererConstantBufferCommit(state->vs_obj_constant_buffer, data);
 }
 
-//NOTE: this returns a byte offset ---from buffer->per_object_data, NOT base_address---
-u32 RendererCommitConstantObjectMemory(RendererConstantBuffer* buffer, void* data, u32 size) {
-	u32 result_slot = RendererConstantBufferGetNextFree(buffer, buffer->num_per_frame_slots);
-	DASSERT(result_slot < buffer->max_slots);
-	u32 offset_from_base_addr = RendererConstantBufferCommit(buffer, data, result_slot, size);
-	return offset_from_base_addr - buffer->slot_size * buffer->num_per_frame_slots;
+u32 RendererCommitConstantVSFrameMemory(RendererState* state, void* data) {
+	return RendererConstantBufferCommit(state->vs_frame_constant_buffer, data);
+}
+
+u32 RendererCommitConstantPSFrameMemory(RendererState* state, void* data) {
+	return RendererConstantBufferCommit(state->ps_frame_constant_buffer, data);
 }
 
 //TODO: eventually load this info from a file instead of hardcoding it here
@@ -217,21 +192,8 @@ void RendererInitTextureIdTable(RendererState* renderer) {
 	renderer->texture_ids[4] = { TexID_Pic, ""};
 }
 
-//TODO: make the renderer specific texture resource creation agnostic in this
 RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim dimension){
 	RendererTextureBuffer* buffer = PushStruct(arena, RendererTextureBuffer);
-	//buffer->dimension = dimension;
-	//buffer->textures[0].id = TexID_Default;
-	//buffer->textures[0].data = PushSize(arena, dimension*dimension*sizeof(u32));
-	//RendererGenDefaultTexture(buffer->textures[0].data, dimension);
-	//D3DCreateTextureResource(&buffer->textures[0], dimension);
-
-	//buffer->textures[1].id = TexID_WhiteTexture;
-	//buffer->textures[1].data = PushSize(arena, dimension*dimension*sizeof(u32));
-	//RendererGenWhiteTexture(buffer->textures[1].data, dimension);
-	//D3DCreateTextureResource(&buffer->textures[1], dimension);
-
-	//stbi_set_flip_vertically_on_load(1);
 	i32 width = 0;
 	i32 height = 0;
 	i32 bpp;
@@ -305,6 +267,32 @@ DirectX::XMMATRIX ApplyViewProjection(DirectX::XMMATRIX model_transform, Rendere
 	return DirectX::XMMatrixTranspose(model_transform * renderer->view * renderer->projection);
 }
 
+void RendererCommitToBuffers(RendererState* renderer, Vertex* vertices, u32 vert_count, Index* indices, u32 index_count, BasicMesh mesh) {
+
+	RendererCommitVertexMemory(renderer->vertex_buffer, vertices, vert_count);
+	RendererCommitIndexMemory(renderer->index_buffer, indices, index_count);
+
+	DirectX::XMMATRIX transform = DXGenTransform(mesh, renderer->projection);
+	DirectX::XMMATRIX mvp = ApplyViewProjection(transform, renderer);
+	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
+	u32 const_buff_offset = RendererCommitConstantVSObjectMemory(renderer, &constants);
+
+	if (mesh.texture_id != TexID_NoTexture) {
+		RendererLoadTexture(renderer, mesh.texture_id);
+	}
+
+	RenderCommand command = {
+		.vertex_count = vert_count,
+		.vertex_buffer_offset = renderer->vertex_buffer->vertex_count - vert_count, 
+		.index_count = index_count,
+		.index_buffer_offset = renderer->index_buffer->index_count - index_count,
+		.vertex_constant_buffer_offset = const_buff_offset,
+		.topology = RenderTopology_TriangleList,
+		.texture_id = mesh.texture_id,
+	};
+	PushRenderCommand(renderer->command_buffer, command);
+}
+
 void RendererPushPlane(RendererState* renderer, BasicMesh mesh) {
 	Vertex vertices_plane[] = {
 		{ {-0.5f,  0.5f, 0.0f}, COLOR_REDA, {0.0f, 0.0f}},
@@ -319,43 +307,15 @@ void RendererPushPlane(RendererState* renderer, BasicMesh mesh) {
 
 	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
 	u32 vert_count = ArrayCount(vertices_plane);
 	u32 index_count = ArrayCount(indices_plane);
 	RendererCommitVertexMemory(vertex_buffer, vertices_plane, vert_count);
 	RendererCommitIndexMemory(index_buffer, indices_plane, index_count);
-
-	//DirectX::XMMATRIX transform = DXGenTransform(mesh, renderer->projection);
-	DirectX::XMMATRIX transform = DXGenTransform(mesh, renderer);
-	//transform = renderer->projection * transform;
-	//transform = ApplyViewProjection(transform, renderer);
-	PerObjectConstants constants = {transform};
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
-
-	if (mesh.texture_id != TexID_NoTexture) {
-		RendererLoadTexture(renderer, mesh.texture_id);
-	}
-
-	RenderCommand command = {
-		.vertex_count = vert_count,
-		.vertex_buffer_offset = vertex_buffer->vertex_count - vert_count, 
-		.index_count = index_count,
-		.index_buffer_offset = index_buffer->index_count - index_count,
-		.vertex_constant_buffer_offset = const_buff_offset,
-		.topology = RenderTopology_TriangleList,
-		.texture_id = mesh.texture_id
-	};
-	PushRenderCommand(renderer->command_buffer, command);
 }
 
-void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh cube_data) {
-	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
-	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
-
+void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh mesh) {
 	f32 side = 0.5f;
-
 	Vertex vertices[] = {
 		{{-side, -side, -side}, COLOR_REDA,     {0.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}}, //0 near side
 		{{ side, -side, -side}, COLOR_REDA,     {0.0f, 0.0f}, { 0.0f,  0.0f, -1.0f}}, //1
@@ -383,8 +343,6 @@ void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh cube_data) {
 		{{ side,  side,  side}, COLOR_YELLOWA,  {0.0f, 0.0f}, { 0.0f,  1.0f,  0.0f}} //23
 	};
 
-	RendererCommitVertexMemory(vertex_buffer, vertices, ArrayCount(vertices));
-
 	Index indices[] = {
 		0,2,1, 2,3,1,
 		4,5,7, 4,7,6,
@@ -394,35 +352,14 @@ void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh cube_data) {
 		20,23,21, 20,22,23 
 	};
 
-	RendererCommitIndexMemory(index_buffer, indices, ArrayCount(indices));
-
-	DirectX::XMMATRIX transform = DXGenTransform(cube_data, renderer->projection);
-	DirectX::XMMATRIX mvp = ApplyViewProjection(transform, renderer);
-	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
-
-	if (cube_data.texture_id != TexID_NoTexture) {
-		RendererLoadTexture(renderer, cube_data.texture_id);
-	}
-
-	u32 vert_count = ArrayCount(vertices);
-	u32 index_count = ArrayCount(indices);
-	RenderCommand command = {
-		.vertex_count = ArrayCount(vertices),
-		.vertex_buffer_offset = vertex_buffer->vertex_count - vert_count, 
-		.index_count = ArrayCount(indices),
-		.index_buffer_offset = index_buffer->index_count - index_count,
-		.vertex_constant_buffer_offset = const_buff_offset,
-		.topology = RenderTopology_TriangleList,
-		.texture_id = cube_data.texture_id,
-	};
-	PushRenderCommand(renderer->command_buffer, command);
+	RendererCommitToBuffers(renderer, vertices, ArrayCount(vertices), indices, ArrayCount(indices),  mesh);
 }
+
 
 void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
 	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+//	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
 	Vertex vertices[] = {
 		{ {-1.0f, -1.0f, -1.0f}, COLOR_RED     },
@@ -451,24 +388,24 @@ void RendererPushCube(RendererState* renderer, BasicMesh cube_data) {
 	DirectX::XMMATRIX transform = DXGenTransform(cube_data, renderer->projection);
 	DirectX::XMMATRIX mvp = ApplyViewProjection(transform, renderer);
 	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
-	u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
+	//u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
-	if (cube_data.texture_id != TexID_NoTexture) {
-		RendererLoadTexture(renderer, cube_data.texture_id);
-	}
+	//if (cube_data.texture_id != TexID_NoTexture) {
+	//	RendererLoadTexture(renderer, cube_data.texture_id);
+	//}
 
-	u32 vert_count = ArrayCount(vertices);
-	u32 index_count = ArrayCount(indices);
-	RenderCommand command = {
-		.vertex_count = ArrayCount(vertices),
-		.vertex_buffer_offset = vertex_buffer->vertex_count - vert_count, 
-		.index_count = ArrayCount(indices),
-		.index_buffer_offset = index_buffer->index_count - index_count,
-		.vertex_constant_buffer_offset = const_buff_offset,
-		.topology = RenderTopology_TriangleList,
-		.texture_id = cube_data.texture_id,
-	};
-	PushRenderCommand(renderer->command_buffer, command);
+	//u32 vert_count = ArrayCount(vertices);
+	//u32 index_count = ArrayCount(indices);
+	//RenderCommand command = {
+	//	.vertex_count = ArrayCount(vertices),
+	//	.vertex_buffer_offset = vertex_buffer->vertex_count - vert_count, 
+	//	.index_count = ArrayCount(indices),
+	//	.index_buffer_offset = index_buffer->index_count - index_count,
+	//	.vertex_constant_buffer_offset = const_buff_offset,
+	//	.topology = RenderTopology_TriangleList,
+	//	.texture_id = cube_data.texture_id,
+	//};
+	//PushRenderCommand(renderer->command_buffer, command);
 }
 
 void RendererPushCone(RendererState* renderer, BasicMesh cone) {
@@ -477,7 +414,7 @@ void RendererPushCone(RendererState* renderer, BasicMesh cone) {
 
 	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+	//RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
 	Vertex* vertices = PushArray(&renderer->scratch_storage, num_verts, Vertex);
 	Index* indices = PushArray(&renderer->scratch_storage, num_indices, Index);
@@ -495,20 +432,23 @@ void RendererPushCone(RendererState* renderer, BasicMesh cone) {
 		RendererLoadTexture(renderer, cone.texture_id);
 	}
 
- //   Mat4 transform = RendererGenBasicMeshTransform(cone, false);
-	//Mat4 inv_trans = Mat4Transpose(Mat4Inverse(transform));
-	//PerObjectConstants constants = {transform, inv_trans};
+	DirectX::XMMATRIX transform = DXGenTransform(cone, renderer->projection);
+	DirectX::XMMATRIX mvp = ApplyViewProjection(transform, renderer);
+	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
 	//u32 const_buff_offset = RendererCommitConstantObjectMemory(constant_buffer, &constants, sizeof(PerObjectConstants));
 
-	////NOTE: doing this because ArrayCount was causing ull to u32 narrowing warning
+	//if (cone.texture_id != TexID_NoTexture) {
+		//RendererLoadTexture(renderer, cone.texture_id);
+	//}
+
 	//RenderCommand command = {
-	//	.vertex_count = num_verts,
-	//	.vertex_buffer_offset = vertex_buffer->vertex_count - num_verts, 
-	//	.index_count = num_indices,
-	//	.index_buffer_offset = index_buffer->index_count - num_indices,
-	//	.vertex_constant_buffer_offset = const_buff_offset,
-	//	.topology = RenderTopology_TriangleList,
-	//	.texture_id = cone.texture_id,
+		//.vertex_count = num_verts,
+		//.vertex_buffer_offset = vertex_buffer->vertex_count - num_verts, 
+		//.index_count = num_indices,
+		//.index_buffer_offset = index_buffer->index_count - num_indices,
+		//.vertex_constant_buffer_offset = const_buff_offset,
+		//.topology = RenderTopology_TriangleList,
+		//.texture_id = cone.texture_id,
 	//};
 	//PushRenderCommand(renderer->command_buffer, command);
 }
@@ -523,7 +463,7 @@ void RendererPushCylinder(RendererState* renderer, BasicMesh cyl) {
 
 	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+	//RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
 	Vertex* vertices = PushArray(&renderer->scratch_storage, num_verts, Vertex);
 	Index* indices = PushArray(&renderer->scratch_storage, num_indices, Index);
@@ -574,7 +514,7 @@ void RendererPushAsset(RendererState* renderer, BasicMesh mesh) {
 
 	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+	//RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
 	RendererCommitVertexMemory(vertex_buffer, asset->vertices, asset->vertex_count);
 	RendererCommitIndexMemory(index_buffer, asset->indices, asset->index_count);
@@ -604,7 +544,7 @@ void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u
 
 	RendererVertexBuffer* vertex_buffer = renderer->vertex_buffer;
 	RendererIndexBuffer* index_buffer = renderer->index_buffer;
-	RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
+	//RendererConstantBuffer* constant_buffer = renderer->vertex_constant_buffer;
 
 	u32 vertex_count = rows * cols;
 	u32 face_count = (rows-1) * (cols-1) * 2;
@@ -676,7 +616,7 @@ u8* RendererLookupAsset(RendererState* renderer, AssetID id) {
 
 //NOTE: this is hardcoding a point light to be in slot 0 of the constant buffer
 void RendererPushPointLight(RendererState* renderer) {
-	RendererCommitConstantFrameMemory(renderer->vertex_constant_buffer, &renderer->per_frame_constants, sizeof(PointLight));
+	RendererCommitConstantPSFrameMemory(renderer, &renderer->ps_pfc);
 }
 
 void RendererPushClear(Vec3 color) {
@@ -691,7 +631,9 @@ void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state,
     RendererResetIndexBuffer(renderer_state->index_buffer);
     RendererResetCommandBuffer(renderer_state->command_buffer);
     //TODO: see if it matters/worth it to only reset everything other than the projection matrix
-    RendererConstantBufferClear(renderer_state->vertex_constant_buffer);
+    RendererConstantBufferClear(renderer_state->vs_frame_constant_buffer);
+    RendererConstantBufferClear(renderer_state->vs_obj_constant_buffer);
+    RendererConstantBufferClear(renderer_state->ps_frame_constant_buffer);
     ArenaReset(&renderer_state->scratch_storage);
 
     CameraUpdate(&game_state->camera, input);

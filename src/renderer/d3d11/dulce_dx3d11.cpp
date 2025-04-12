@@ -192,6 +192,73 @@ D3D11_PRIMITIVE_TOPOLOGY D3DGetTopology(RenderTopology topology) {
     return D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
 }
 
+//NOTE: Defaulting to phong shaders
+void D3DLoadShaders(RendererState* renderer) {
+    ID3DBlob* blob;
+    D3DReadFileToBlob(L"./shaders/phongPS.cso", &blob);
+    g_d3d.device->CreatePixelShader(blob->GetBufferPointer(),
+                                    blob->GetBufferSize(),
+                                    0,
+                                    &g_d3d.pixel_shaders[PixelShaderType_Phong]);
+    ID3D11PixelShader* pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Phong];
+    g_d3d.context->PSSetShader(pixel_shader, 0, 0);
+
+    ID3D11VertexShader* vertex_shader = g_d3d.vertex_shaders[PixelShaderType_Phong];
+    D3DReadFileToBlob(L"./shaders/phongVS.cso", &blob);
+    g_d3d.device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), 0, &vertex_shader);
+    g_d3d.context->VSSetShader(vertex_shader, 0, 0);
+
+    ID3D11InputLayout* input_layout;
+    D3D11_INPUT_ELEMENT_DESC input_desc[] = {
+        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                            0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"Color", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    g_d3d.device->CreateInputLayout(input_desc, ArrayCount(input_desc), blob->GetBufferPointer(), blob->GetBufferSize(), &input_layout);
+    g_d3d.context->IASetInputLayout(input_layout);
+}
+
+void D3DInitConstantBuffers(RendererState* renderer) {
+    RendererConstantBuffer* vso_cb = renderer->vs_obj_constant_buffer;
+    D3D11_BUFFER_DESC vso_cb_desc = {
+        .ByteWidth = vso_cb->max_slots * vso_cb->slot_size,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        .MiscFlags = 0,
+        .StructureByteStride = 0
+    };
+    D3D11_SUBRESOURCE_DATA vso_sub_data = {};
+    vso_sub_data.pSysMem = vso_cb->base_address;
+    g_d3d.device->CreateBuffer(&vso_cb_desc, &vso_sub_data, &g_d3d.vs_obj_cb);
+
+    RendererConstantBuffer* vsf_cb = renderer->vs_frame_constant_buffer;
+    D3D11_BUFFER_DESC vsf_cb_desc = {
+        .ByteWidth = vsf_cb->max_slots * vsf_cb->slot_size,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        .MiscFlags = 0,
+        .StructureByteStride = 0
+    };
+    D3D11_SUBRESOURCE_DATA vsf_sub_data = {};
+    vsf_sub_data.pSysMem = vsf_cb->base_address;
+    g_d3d.device->CreateBuffer(&vsf_cb_desc, &vsf_sub_data, &g_d3d.vs_frame_cb);
+
+    RendererConstantBuffer* psf_cb = renderer->ps_frame_constant_buffer;
+    D3D11_BUFFER_DESC psf_cb_desc = {
+        .ByteWidth = psf_cb->max_slots * psf_cb->slot_size,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        .MiscFlags = 0,
+        .StructureByteStride = 0
+    };
+    D3D11_SUBRESOURCE_DATA psf_sub_data = {};
+    psf_sub_data.pSysMem = psf_cb->base_address;
+    g_d3d.device->CreateBuffer(&psf_cb_desc, &psf_sub_data, &g_d3d.ps_frame_cb);
+}
 
 void D3DInitSubresources(RendererState* renderer) {
     D3D11_BUFFER_DESC buffer_desc = {
@@ -222,64 +289,9 @@ void D3DInitSubresources(RendererState* renderer) {
     g_d3d.device->CreateBuffer(&ibd, &isd, &g_d3d.index_buffer);
     g_d3d.context->IASetIndexBuffer(g_d3d.index_buffer, DXGI_FORMAT_R16_UINT, 0);
 
-    //TODO: probably going to need an array of shaders to choose from and those D3D specific shaders will be wrapped in a 
-    //      renderer agnostic shader struct that will pick the right thing based on the renderer. Same with input layout
-    ID3DBlob* tex_pixel_blob;
-    D3DReadFileToBlob(L"./shaders/phongPS.cso", &tex_pixel_blob);
-    g_d3d.device->CreatePixelShader(tex_pixel_blob->GetBufferPointer(),
-                                    tex_pixel_blob->GetBufferSize(),
-                                    0,
-                                    &g_d3d.pixel_shaders[PixelShaderType_Textured]);
-    ID3D11PixelShader* pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Textured];
-    g_d3d.context->PSSetShader(pixel_shader, 0, 0);
-    //ID3DBlob* untex_pixel_blob;
-    //ID3D11PixelShader* untex_pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Untextured];
-    //D3DReadFileToBlob(L"./shaders/untextured_pixel.cso", &untex_pixel_blob);
-    //g_d3d.device->CreatePixelShader(untex_pixel_blob->GetBufferPointer(),
-    //                                untex_pixel_blob->GetBufferSize(),
-    //                                0,
-    //                                &g_d3d.pixel_shaders[PixelShaderType_Untextured]);
+    D3DLoadShaders(renderer);
 
-    ID3DBlob* vert_blob;
-    ID3D11VertexShader* vertex_shader = g_d3d.vertex_shader;
-    D3DReadFileToBlob(L"./shaders/phongVS.cso", &vert_blob);
-    g_d3d.device->CreateVertexShader(vert_blob->GetBufferPointer(), vert_blob->GetBufferSize(), 0, &vertex_shader);
-    g_d3d.context->VSSetShader(vertex_shader, 0, 0);
-
-    RendererConstantBuffer* const_buffer = renderer->vertex_constant_buffer;
-    D3D11_BUFFER_DESC proj_view_buffer_desc = {
-        .ByteWidth = const_buffer->slot_size * const_buffer->num_per_frame_slots,
-        .Usage = D3D11_USAGE_DYNAMIC,
-        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-        .MiscFlags = 0,
-        .StructureByteStride = 0
-    };
-    D3D11_SUBRESOURCE_DATA proj_view_sub_data = {};
-    proj_view_sub_data.pSysMem = const_buffer->base_address;
-    g_d3d.device->CreateBuffer(&proj_view_buffer_desc, &proj_view_sub_data, &g_d3d.proj_view_buffer);
-
-    D3D11_BUFFER_DESC const_buffer_desc = {
-        .ByteWidth = const_buffer->max_slots * const_buffer->slot_size - proj_view_buffer_desc.ByteWidth,
-        .Usage = D3D11_USAGE_DYNAMIC,
-        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-        .MiscFlags = 0,
-        .StructureByteStride = 0
-    };
-    D3D11_SUBRESOURCE_DATA const_sub_data = {};
-    const_sub_data.pSysMem = const_buffer->base_address + (const_buffer->slot_size * const_buffer->num_per_frame_slots);
-    g_d3d.device->CreateBuffer(&const_buffer_desc, &const_sub_data, &g_d3d.constant_buffer);
-
-    ID3D11InputLayout* input_layout;
-    D3D11_INPUT_ELEMENT_DESC input_desc[] = {
-        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                            0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"Color", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    };
-    g_d3d.device->CreateInputLayout(input_desc, ArrayCount(input_desc), vert_blob->GetBufferPointer(), vert_blob->GetBufferSize(), &input_layout);
-    g_d3d.context->IASetInputLayout(input_layout);
+    D3DInitConstantBuffers(renderer);
 }
 
 void D3DCreateTextureResource(Texture* texture, u32 width, u32 height) {
@@ -357,75 +369,75 @@ void D3DRenderCommands(RendererState* renderer) {
     MemCopy(renderer->index_buffer->base_address, index_map_resource.pData, renderer->index_buffer->used_memory_size);
     g_d3d.context->Unmap(g_d3d.index_buffer, NULL);
 
-    u32 frame_section_size = renderer->vertex_constant_buffer->num_per_frame_slots * renderer->vertex_constant_buffer->slot_size;
-    PerFrameConstants test = *((PerFrameConstants*)(renderer->vertex_constant_buffer->base_address)); 
-    D3D11_MAPPED_SUBRESOURCE proj_view_map_resource;
-    g_d3d.context->Map(g_d3d.proj_view_buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &proj_view_map_resource);
-    MemCopy(renderer->vertex_constant_buffer->base_address, proj_view_map_resource.pData, frame_section_size);
-    g_d3d.context->Unmap(g_d3d.proj_view_buffer, NULL);
 
-    u32 object_section_size = renderer->vertex_constant_buffer->num_per_object_slots * renderer->vertex_constant_buffer->slot_size;
-    D3D11_MAPPED_SUBRESOURCE constant_map_resource;
-    g_d3d.context->Map(g_d3d.constant_buffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &constant_map_resource);
-    MemCopy(renderer->vertex_constant_buffer->base_address + frame_section_size, constant_map_resource.pData, object_section_size);
-    g_d3d.context->Unmap(g_d3d.constant_buffer, NULL);
+
+    D3D11_MAPPED_SUBRESOURCE vs_obj_mr;
+    u32 vs_obj_buffer_size = renderer->vs_obj_constant_buffer->slot_size * renderer->vs_obj_constant_buffer->max_slots; 
+    g_d3d.context->Map(g_d3d.vs_obj_cb, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &vs_obj_mr);
+    MemCopy(renderer->vs_obj_constant_buffer->base_address, vs_obj_mr.pData, vs_obj_buffer_size);
+    g_d3d.context->Unmap(g_d3d.vs_obj_cb, NULL);
+
+    D3D11_MAPPED_SUBRESOURCE vs_frame_mr;
+    u32 vs_frame_buffer_size = renderer->vs_frame_constant_buffer->slot_size * renderer->vs_frame_constant_buffer->max_slots; 
+    g_d3d.context->Map(g_d3d.vs_frame_cb, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &vs_frame_mr);
+    MemCopy(renderer->vs_frame_constant_buffer->base_address, vs_frame_mr.pData, vs_frame_buffer_size);
+    g_d3d.context->Unmap(g_d3d.vs_frame_cb, NULL);
+
+    D3D11_MAPPED_SUBRESOURCE ps_frame_mr;
+    u32 ps_frame_buffer_size = renderer->ps_frame_constant_buffer->slot_size * renderer->ps_frame_constant_buffer->max_slots; 
+    g_d3d.context->Map(g_d3d.ps_frame_cb, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ps_frame_mr);
+    MemCopy(renderer->ps_frame_constant_buffer->base_address, ps_frame_mr.pData, ps_frame_buffer_size);
+    g_d3d.context->Unmap(g_d3d.ps_frame_cb, NULL);
 
     u32 num_constants = 16;
     u32 proj_view_offset = 0;
-    g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.proj_view_buffer, &proj_view_offset, &num_constants);
-    g_d3d.context->PSSetConstantBuffers(0, 1, &g_d3d.proj_view_buffer);
+    g_d3d.context->VSSetConstantBuffers1(0, 1, &g_d3d.vs_frame_cb, NULL, NULL);
+    g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.vs_obj_cb, NULL, NULL);
+    g_d3d.context->PSSetConstantBuffers(0, 1, &g_d3d.ps_frame_cb);
     RendererCommandBuffer* command_buffer = renderer->command_buffer;
     for (RenderCommand* command = (RenderCommand*)command_buffer->base_address; (u8*)command < command_buffer->base_address + command_buffer->used_memory_size; command++) {
         u32 offset = command->vertex_constant_buffer_offset/sizeof(Vec4);
 
-        //if (command->texture_id == TexID_NoTexture) {
-        //    if (g_d3d.bound_pixel_shader != PixelShaderType_Untextured) {
-        //        D3DSetPixelShader(PixelShaderType_Untextured);
-        //    }
-        //}
-        //else {
-            //D3DBindTexture(command->texture_id);
-            if (g_d3d.bound_pixel_shader != PixelShaderType_Textured) {
-                D3DSetPixelShader(PixelShaderType_Textured);
-            }
-            g_d3d.context->PSSetShaderResources(0, 1, &g_d3d.textures_2d[0].shader_view);
-        //}
-
-        g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.constant_buffer, &offset, &num_constants);
+        if (g_d3d.bound_pixel_shader != PixelShaderType_Textured) {
+            D3DSetPixelShader(PixelShaderType_Textured);
+        }
+        g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.vs_obj_cb, &offset, &num_constants);
+        g_d3d.context->PSSetShaderResources(0, 1, &g_d3d.textures_2d[0].shader_view);
         g_d3d.context->IASetPrimitiveTopology(D3DGetTopology(command->topology));
         g_d3d.context->DrawIndexed(command->index_count, command->index_buffer_offset, command->vertex_buffer_offset);
 
-        ImGui_ImplDX11_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
-
-        static bool show_demo_window = false;
-        if (show_demo_window) {
-            ImGui::ShowDemoWindow(&show_demo_window);
-        }
-
-        if (ImGui::Begin("Light Movement")) {
-            PointLight* light = &renderer->per_frame_constants.point_light;
-            ImGui::SliderFloat("X", &light->position.x, -60.0f, 60.0f, "%.1f");
-            ImGui::SliderFloat("Y", &light->position.y, -60.0f, 60.0f, "%.1f");
-            ImGui::SliderFloat("Z", &light->position.z, -60.0f, 60.0f, "%.1f");
-
-            ImGui::Text("Intensity/Color");
-            ImGui::SliderFloat("Intensity", &light->diffuse_intensity, 0.01, 2.0f, "%.1f");
-            ImGui::ColorEdit3("Diffuse Color", &light->diffuse_color.x);
-            ImGui::ColorEdit3("Ambient", &light->ambient.x);
-            ImGui::ColorEdit3("Material", &light->mat_color.x);
-
-            ImGui::Text("Falloff");
-            ImGui::SliderFloat("Constant", &light->att_const, 0.05f, 10.0f, "%.2f");
-            ImGui::SliderFloat("Linear", &light->att_lin, 0.0001f, 4.0f, "%.4f");
-            ImGui::SliderFloat("Quadratic", &light->att_quad, 0.0000001f, 10.0f, "%.2f");
-        }
-        ImGui::End();
-
-
-        ImGui::Render();
-        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     }
+
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    static bool show_demo_window = false;
+    if (show_demo_window) {
+        ImGui::ShowDemoWindow(&show_demo_window);
+    }
+
+    if (ImGui::Begin("Light Movement")) {
+        PointLight* light = &renderer->ps_pfc.point_light;
+        ImGui::SliderFloat("X", &light->position.x, -60.0f, 60.0f, "%.1f");
+        ImGui::SliderFloat("Y", &light->position.y, -60.0f, 60.0f, "%.1f");
+        ImGui::SliderFloat("Z", &light->position.z, -60.0f, 60.0f, "%.1f");
+
+        ImGui::Text("Intensity/Color");
+        ImGui::SliderFloat("Intensity", &light->diffuse_intensity, 0.01, 2.0f, "%.1f");
+        ImGui::ColorEdit3("Diffuse Color", &light->diffuse_color.x);
+        ImGui::ColorEdit3("Ambient", &light->ambient.x);
+        ImGui::ColorEdit3("Material", &light->mat_color.x);
+
+        ImGui::Text("Falloff");
+        ImGui::SliderFloat("Constant", &light->att_const, 0.05f, 10.0f, "%.2f");
+        ImGui::SliderFloat("Linear", &light->att_lin, 0.0001f, 4.0f, "%.4f");
+        ImGui::SliderFloat("Quadratic", &light->att_quad, 0.0000001f, 10.0f, "%.2f");
+    }
+    ImGui::End();
+
+
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 

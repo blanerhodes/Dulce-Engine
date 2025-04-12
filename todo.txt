@@ -1,20 +1,14 @@
 FEATURE TODO:
-- render a sphere then work on the skybox being an inverted sphere
-- generic mesh handling
-- all of the other primitive meshes i listed (cylinders, spheres, etc)
-- proper skybox
-- grid floor
-- object skinning??
-- convert to using a world chunk and offset system instead of absolute floats (will require big changes
+[] add sphere rendering
+[x] generic mesh handling
+[] cube mapping
+[] proper skybox
+[] grid floor
+[] object skinning??
+[] convert to using a world chunk and offset system instead of absolute floats (will require big changes
   because the renderer origin will need to move around and not be 1:1 with the world origin)
 
 THINGS TO FIX/TWEAK:
-- circular dependency between render.cpp and dx3d11.cpp
-- ciccular dependendy between camera and GameInput files
-- world coords are used for objects but the camera position is still working off of renderer coords
-  - I think I meant coords already converted into what d3d11 expects. Its y+ is up and z+ is into the screen instead of how my world coords are
-    with y+ into the screen and z+ is up
-
 
 
 8/31/2023:
