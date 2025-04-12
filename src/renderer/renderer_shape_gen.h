@@ -10,19 +10,14 @@
  - change cone normal generation to point directly out from cone center instead of the face
 */
 
-DirectX::XMMATRIX DXGenTransform(BasicMesh mesh, RendererState* renderer) {
-	DirectX::XMMATRIX result = 
-							DirectX::XMMatrixRotationRollPitchYaw(mesh.rotation_angles.x, mesh.rotation_angles.y, mesh.rotation_angles.z) *
-							DirectX::XMMatrixTranslation(mesh.position.x, mesh.position.y, mesh.position.z) *
-							DirectX::XMMatrixScaling(g_d3d.aspect_ratio, 1.0f, 1.0f);
-	return result;
-}
-
-DirectX::XMMATRIX DXGenTransform(BasicMesh mesh, DirectX::XMMATRIX proj) {
-	DirectX::XMMATRIX result = 
-							DirectX::XMMatrixScaling(mesh.scale.x, mesh.scale.y, mesh.scale.z) *
-							DirectX::XMMatrixRotationRollPitchYaw(mesh.rotation_angles.x, mesh.rotation_angles.y, mesh.rotation_angles.z) *
-							DirectX::XMMatrixTranslation(mesh.position.x, mesh.position.y, mesh.position.z);
+DirectX::XMMATRIX DXGenTransform(BasicMesh mesh, bool use_scale = true) {
+	DirectX::XMMATRIX result = DirectX::XMMatrixIdentity(); 
+	if (use_scale) {
+		result = result * DirectX::XMMatrixScaling(mesh.scale.x, mesh.scale.y, mesh.scale.z); 
+	}
+	result = result * 
+				DirectX::XMMatrixRotationRollPitchYaw(DegToRad(mesh.rotation_angles.x), DegToRad(mesh.rotation_angles.y), DegToRad(mesh.rotation_angles.z)) *
+				DirectX::XMMatrixTranslation(mesh.position.x, mesh.position.y, mesh.position.z);
 	return result;
 }
 

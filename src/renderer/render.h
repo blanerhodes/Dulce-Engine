@@ -292,15 +292,14 @@ void RendererInitTextureBuffer(RendererState* state, TextureDim dimension);
 void RendererResetTextureBuffer(RendererTextureBuffer* texture_buffer);
 u32 RendererLoadTexture(RendererState* renderer, u32 texture_id);
 
-void RendererPushPlane(RendererState* renderer, BasicMesh plane_data);
-void RendererPushCubeIndFaces(RendererState* renderer, BasicMesh cube_data);
-void RendererPushCube(RendererState* renderer, BasicMesh cube_data);
-void RendererPushCone(RendererState* renderer, BasicMesh cone);
+void RendererPushPlane(RendererState* renderer, BasicMesh mesh);
+void RendererPushCube(RendererState* renderer, BasicMesh mesh);
+void RendererPushCone(RendererState* renderer, BasicMesh mesh);
 
 void RendererPushPyramid(RendererState* renderer, BasicMesh mesh);
-void RendererPushCylinder(RendererState* renderer, BasicMesh cyl);
+void RendererPushCylinder(RendererState* renderer, BasicMesh mesh);
 void RendererPushAsset(RendererState* renderer, BasicMesh mesh);
-void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh grid);
+void RendererPushGrid(RendererState* renderer, f32 width, f32 depth, u32 rows, u32 cols, BasicMesh mesh);
 
 void RendererPushPointLight(RendererState* renderer);
 void RendererPushClear(Vec3 color);

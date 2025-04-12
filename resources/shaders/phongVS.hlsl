@@ -23,5 +23,6 @@ VSOut main(VSIn vin) {
     vso.color = vin.color;
     vso.normal = mul(vin.normal, (float3x3)model_transform);
     vso.pos = mul(float4(vin.position, 1.0f), model_view_proj);
+    //test
     return vso;
 }
