@@ -50,9 +50,19 @@ enum RenderTopology {
 	RenderTopology_PointList
 };
 
+enum VertexShaderType {
+	VertexShaderType_Textured,
+	VertexShaderType_TexturedPhong,
+	VertexShaderType_UntexturedPhong,
+	VertexShaderType_MAX
+};
+
 enum PixelShaderType {
+	PixelShaderType_Solid,
 	PixelShaderType_Textured,
-	PixelShaderType_Phong,
+	PixelShaderType_Untextured,
+	PixelShaderType_TexturedPhong,
+	PixelShaderType_UntexturedPhong,
 	PixelShaderType_MAX
 };
 
@@ -109,6 +119,7 @@ struct RenderCommand {
 	u32 vertex_constant_buffer_offset;
 	RenderTopology topology;
 	i32 texture_id;
+	bool lit;
 };
 
 struct RendererCommandBuffer {
@@ -217,6 +228,7 @@ struct BasicMesh {
 	Vec4 color;
 	i32 texture_id;
 	AssetID asset_id;
+	bool lit;
 };
 
 //struct DirectionalLight {

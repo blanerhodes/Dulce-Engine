@@ -29,9 +29,6 @@ struct D3DState {
     u32 index_geometry_offsets[GeoOffset_Terminator];
 };
 
-
-//static D3DState renderer_state = {};
-
 typedef HRESULT DXGIGetDebugInterface_ (REFIID, void**);
 static DXGIGetDebugInterface_* DxgiGetDebugInterface;
 
@@ -195,25 +192,40 @@ D3D11_PRIMITIVE_TOPOLOGY D3DGetTopology(RenderTopology topology) {
 //NOTE: Defaulting to phong shaders
 void D3DLoadShaders(RendererState* renderer) {
     ID3DBlob* blob;
-    D3DReadFileToBlob(L"./shaders/textured_phongPS.cso", &blob);
+    D3DReadFileToBlob(L"./shaders/untexturedPS.cso", &blob);
+    g_d3d.device->CreatePixelShader(blob->GetBufferPointer(),
+                                    blob->GetBufferSize(),
+                                    0,
+                                    &g_d3d.pixel_shaders[PixelShaderType_Untextured]);
+
+    D3DReadFileToBlob(L"./shaders/texturedPS.cso", &blob);
     g_d3d.device->CreatePixelShader(blob->GetBufferPointer(),
                                     blob->GetBufferSize(),
                                     0,
                                     &g_d3d.pixel_shaders[PixelShaderType_Textured]);
 
+    D3DReadFileToBlob(L"./shaders/textured_phongPS.cso", &blob);
+    g_d3d.device->CreatePixelShader(blob->GetBufferPointer(),
+                                    blob->GetBufferSize(),
+                                    0,
+                                    &g_d3d.pixel_shaders[PixelShaderType_TexturedPhong]);
+
     D3DReadFileToBlob(L"./shaders/phongPS.cso", &blob);
     g_d3d.device->CreatePixelShader(blob->GetBufferPointer(),
                                     blob->GetBufferSize(),
                                     0,
-                                    &g_d3d.pixel_shaders[PixelShaderType_Phong]);
-    ID3D11PixelShader* pixel_shader = g_d3d.pixel_shaders[PixelShaderType_Phong];
-    g_d3d.context->PSSetShader(pixel_shader, 0, 0);
+                                    &g_d3d.pixel_shaders[PixelShaderType_UntexturedPhong]);
+    g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_UntexturedPhong], 0, 0);
 
+    D3DReadFileToBlob(L"./shaders/texturedVS.cso", &blob);
+    g_d3d.device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), 0, &g_d3d.vertex_shaders[VertexShaderType_Textured]);
 
-    ID3D11VertexShader* vertex_shader = g_d3d.vertex_shaders[PixelShaderType_Phong];
+    D3DReadFileToBlob(L"./shaders/textured_phongVS.cso", &blob);
+    g_d3d.device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), 0, &g_d3d.vertex_shaders[VertexShaderType_TexturedPhong]);
+
     D3DReadFileToBlob(L"./shaders/phongVS.cso", &blob);
-    g_d3d.device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), 0, &vertex_shader);
-    g_d3d.context->VSSetShader(vertex_shader, 0, 0);
+    g_d3d.device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), 0, &g_d3d.vertex_shaders[VertexShaderType_UntexturedPhong]);
+    g_d3d.context->VSSetShader(g_d3d.vertex_shaders[VertexShaderType_UntexturedPhong], 0, 0);
 
     ID3D11InputLayout* input_layout;
     D3D11_INPUT_ELEMENT_DESC input_desc[] = {
@@ -405,12 +417,26 @@ void D3DRenderCommands(RendererState* renderer) {
     for (RenderCommand* command = (RenderCommand*)command_buffer->base_address; (u8*)command < command_buffer->base_address + command_buffer->used_memory_size; command++) {
         u32 offset = command->vertex_constant_buffer_offset/sizeof(Vec4);
 
-        if (command->texture_id == TexID_Unset) {
-            g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_Phong], 0, 0);
+        if (command->lit) {
+            if (command->texture_id == TexID_Unset) {
+                g_d3d.context->VSSetShader(g_d3d.vertex_shaders[VertexShaderType_UntexturedPhong], 0, 0);
+                g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_UntexturedPhong], 0, 0);
+            } else {
+                g_d3d.context->VSSetShader(g_d3d.vertex_shaders[VertexShaderType_TexturedPhong], 0, 0);
+                g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_TexturedPhong], 0, 0);
+                D3DBindTexture(command->texture_id);
+            }
+
         } else {
-            g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_Textured], 0, 0);
-            D3DBindTexture(command->texture_id);
+                g_d3d.context->VSSetShader(g_d3d.vertex_shaders[VertexShaderType_Textured], 0, 0);
+            if (command->texture_id == TexID_Unset) {
+                g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_Untextured], 0, 0);
+            } else {
+                g_d3d.context->PSSetShader(g_d3d.pixel_shaders[PixelShaderType_Textured], 0, 0);
+                D3DBindTexture(command->texture_id);
+            }
         }
+
 
         g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.vs_obj_cb, &offset, &num_constants);
         g_d3d.context->IASetPrimitiveTopology(D3DGetTopology(command->topology));

@@ -55,7 +55,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         RendererInitTextureBuffer(renderer_state, TEXTURE_DIM_512);
         RendererInitAssets(renderer_state, 16);
         D3DInitSubresources(renderer_state);
-        renderer_state->projection = DirectX::XMMatrixPerspectiveFovLH(45.0f, 1.0f / g_d3d.aspect_ratio, 0.1f, 100.0f);
+        renderer_state->projection = DirectX::XMMatrixPerspectiveFovLH(45.0f, 1.0f / g_d3d.aspect_ratio, 0.1f, 1000.0f);
 
         renderer_state->ps_pfc.point_light = {
             .position = {0.0f, 0.0f, 0.0f},
@@ -105,7 +105,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .scale = {0.5f, 0.5f, 0.5f},
         .rotation_angles = {0, 0.0f, 45.0f},
         .color = COLOR_REDA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Unset,
+        .lit = true
     };
     RendererPushCube(renderer_state, cube);
 
@@ -114,7 +115,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .scale = {1.0f, 1.0f, 1.0f},
         .rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
         .color = COLOR_REDA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Unset, 
+        .lit = true
     };
     RendererPushCube(renderer_state, cube1);
 
@@ -122,7 +124,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .position = {renderer_state->ps_pfc.point_light.position},
         .scale = {0.25f, 0.25f, 0.25f},
         .color = COLOR_REDA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Unset,
+        .lit = true
     };
     RendererPushCube(renderer_state, light_cube);
     RendererPushPointLight(renderer_state);
@@ -133,7 +136,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .rotation_angles = {0, game_state->t_sin, game_state->t_sin},
         //.rotation_angles = {0, 0, 0},
         .color = COLOR_BLUEA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Unset,
+        .lit = true
     };
     RendererPushPyramid(renderer_state, pyramid);
 
@@ -143,7 +147,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .rotation_angles = {0, game_state->t_sin* 20, game_state->t_sin * 20},
         //.rotation_angles = {0, 0, 0},
         .color = COLOR_GREENA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Unset,
+        .lit = true
     };
     RendererPushCone(renderer_state, cone);
 
@@ -153,7 +158,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .rotation_angles = {0, game_state->t_sin, game_state->t_sin},
         //.rotation_angles = {0, 0, 0},
         .color = COLOR_MAGENTAA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Unset,
+        .lit = true
     };
     RendererPushCylinder(renderer_state, cylinder);
 
@@ -162,7 +168,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .scale = {20.0f, 20.0f, 1.0f},
         .rotation_angles = {90, 0, 0},
         .color = COLOR_CYANA,
-        .texture_id = TexID_Pic
+        .texture_id = TexID_Pic,
+        .lit = true
     };
     RendererPushPlane(renderer_state, plane);
 
@@ -173,7 +180,8 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         //.rotation_angles = {0, game_state->t_sin * 20.0f, game_state->t_sin * 20.0f},
         .color = COLOR_WHITEA,
         .texture_id = TexID_Unset,
-        .asset_id = {.name = "suzanna"}
+        .asset_id = {.name = "suzanna"},
+        .lit = true
     };
     RendererPushAsset(renderer_state, suzanne);
 
@@ -183,9 +191,42 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .rotation_angles = {0, game_state->t_sin * 20.0f, game_state->t_sin * 20.0f},
         .color = COLOR_WHITEA,
         .texture_id = TexID_Unset,
-        .asset_id = {.name = "sphere"}
+        .asset_id = {.name = "sphere"},
+        .lit = true
     };
     RendererPushAsset(renderer_state, sphere);
+
+
+    BasicMesh sky_front = {
+        .position = {0.0f, 0.0f, 50.0f},
+        .scale = {150, 100, 1},
+        .texture_id = TexID_Sky
+    };
+    RendererPushPlane(renderer_state, sky_front);
+
+    BasicMesh sky_left = {
+        .position = {100.0f, 0.0f, 0.0f},
+        .scale = {200, 150, 1},
+        .rotation_angles = {0.0f, -90.0f, 0.0f},
+        .texture_id = TexID_Sky
+    };
+    RendererPushPlane(renderer_state, sky_left);
+
+    BasicMesh sky_right = {
+        .position = {-100.0f, 0.0f, 0.0f},
+        .scale = {200, 150, 1},
+        .rotation_angles = {0.0f, 90.0f, 0.0f},
+        .texture_id = TexID_Sky
+    };
+    RendererPushPlane(renderer_state, sky_right);
+
+    BasicMesh sky_back = {
+        .position = {0.0f, 0.0f, -50.0f},
+        .scale = {200, 150, 1},
+        .rotation_angles = {0.0f, 180.0f, 0.0f},
+        .texture_id = TexID_Sky
+    };
+    RendererPushPlane(renderer_state, sky_back);
 
     /*
 

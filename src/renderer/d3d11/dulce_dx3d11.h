@@ -39,7 +39,7 @@ struct Direct3d {
     ID3D11Buffer* vs_frame_cb;
     ID3D11Buffer* ps_frame_cb;
     
-    ID3D11VertexShader* vertex_shaders[PixelShaderType_MAX];
+    ID3D11VertexShader* vertex_shaders[VertexShaderType_MAX];
     ID3D11PixelShader* pixel_shaders[PixelShaderType_MAX];
     PixelShaderType bound_pixel_shader;
     

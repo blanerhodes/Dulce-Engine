@@ -202,12 +202,18 @@ RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim 
 
 	buffer->textures[TexID_WhiteTexture].id = TexID_WhiteTexture;
 	buffer->textures[TexID_WhiteTexture].data = PushSize(arena, dimension*dimension*sizeof(u32));
-	RendererGenWhiteTexture(buffer->textures[TexID_WhiteTexture].data, 128);
+	RendererGenWhiteTexture(buffer->textures[TexID_WhiteTexture].data, dimension);
 	D3DCreateTextureResource(&buffer->textures[TexID_WhiteTexture], dimension, dimension);
 
 	i32 width = 0;
 	i32 height = 0;
 	i32 bpp;
+	u8* sky = stbi_load("C:\\dev\\d3d_proj\\resources\\assets\\sky.png", &width, &height, &bpp, 4);
+	buffer->textures[TexID_Sky].id = TexID_Sky;
+	buffer->textures[TexID_Sky].data = PushSize(arena, width*height*sizeof(u32));
+	MemCopy(sky, buffer->textures[TexID_Sky].data, width*height*bpp);
+	D3DCreateTextureResource(&buffer->textures[TexID_Sky], width, height);
+
 	u8* image = stbi_load("C:\\dev\\d3d_proj\\resources\\assets\\awesomeface.png", &width, &height, &bpp, 4);
 	buffer->textures[TexID_Pic].id = TexID_Pic;
 	buffer->textures[TexID_Pic].data = PushSize(arena, width*height*sizeof(u32));
@@ -264,8 +270,8 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 		} break;
 		case TexID_Sky: {
 			buffer->textures[buffer_index_result].id = TexID_Sky;
-			RendererGenGradientTexture(buffer->textures[buffer_index_result].data, buffer->dimension, COLOR_BLUE);
-			D3DCreateTextureResource(&buffer->textures[buffer_index_result], buffer->dimension);
+			//RendererGenGradientTexture(buffer->textures[buffer_index_result].data, buffer->dimension, COLOR_BLUE);
+			//D3DCreateTextureResource(&buffer->textures[buffer_index_result], buffer->dimension);
 		} break;
 		case TexID_Pic: {
 			buffer->textures[buffer_index_result].id = TexID_Pic;
@@ -302,6 +308,7 @@ void RendererCommitToBuffers(RendererState* renderer, Vertex* vertices, u32 vert
 		.vertex_constant_buffer_offset = const_buff_offset,
 		.topology = RenderTopology_TriangleList,
 		.texture_id = mesh.texture_id,
+		.lit = mesh.lit
 	};
 	PushRenderCommand(renderer->command_buffer, command);
 }

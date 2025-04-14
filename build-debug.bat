@@ -52,7 +52,12 @@ REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_pixel.pdb /T ps_5_0 /Fo ./bin/d
 fxc /Od /Zi /Fd ./bin/debug/shaders/phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/phongVS.cso ./resources/shaders/phongVS.hlsl
 fxc /Od /Zi /Fd ./bin/debug/shaders/phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/phongPS.cso ./resources/shaders/phongPS.hlsl
 
+fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/textured_phongVS.cso ./resources/shaders/textured_phongVS.hlsl
 fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_phongPS.cso ./resources/shaders/textured_phongPS.hlsl
+
+fxc /Od /Zi /Fd ./bin/debug/shaders/texturedVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/texturedVS.cso ./resources/shaders/texturedVS.hlsl
+fxc /Od /Zi /Fd ./bin/debug/shaders/texturedPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/texturedPS.cso ./resources/shaders/texturedPS.hlsl
+fxc /Od /Zi /Fd ./bin/debug/shaders/untexturedPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/untexturedPS.cso ./resources/shaders/untexturedPS.hlsl
 
  
 ECHO Successfully built shaders
