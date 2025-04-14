@@ -47,6 +47,10 @@ struct PoolArena {
 };
 
 
+void* PushSize_(MemoryArena* arena, size_t size);
+void* PushCopy_(MemoryArena* arena, void* src, u64 size);
+
+
 #define PushStruct(arena, type) (type*)PushSize_(arena, sizeof(type))
 #define PushArray(arena, count, type) (type*)PushSize_(arena, (count) * sizeof(type))
 #define PushSize(arena, size) (u8*)PushSize_(arena, size)

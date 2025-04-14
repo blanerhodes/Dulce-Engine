@@ -398,11 +398,14 @@ void D3DRenderCommands(RendererState* renderer) {
     for (RenderCommand* command = (RenderCommand*)command_buffer->base_address; (u8*)command < command_buffer->base_address + command_buffer->used_memory_size; command++) {
         u32 offset = command->vertex_constant_buffer_offset/sizeof(Vec4);
 
-        if (g_d3d.bound_pixel_shader != PixelShaderType_Textured) {
-            D3DSetPixelShader(PixelShaderType_Textured);
+        if (command->texture_id == TexID_Unset) {
+            ID3D11ShaderResourceView* null_view = {NULL};
+            g_d3d.context->PSSetShaderResources(0, 1, &null_view);
+        } else {
+            D3DBindTexture(command->texture_id);
         }
+
         g_d3d.context->VSSetConstantBuffers1(1, 1, &g_d3d.vs_obj_cb, &offset, &num_constants);
-        g_d3d.context->PSSetShaderResources(0, 1, &g_d3d.textures_2d[0].shader_view);
         g_d3d.context->IASetPrimitiveTopology(D3DGetTopology(command->topology));
         g_d3d.context->DrawIndexed(command->index_count, command->index_buffer_offset, command->vertex_buffer_offset);
 

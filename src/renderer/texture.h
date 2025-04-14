@@ -2,12 +2,11 @@
 
 //TODO: figure out some way to differentiate between the 128/512/1024 texture buffers
 enum TextureID {
-	TexID_NoTexture = -1,
+	TexID_Unset,
 	TexID_Default,
 	TexID_WhiteTexture,
 	TexID_Sky,
-	TexID_Pic,
-	TexID_Unset
+	TexID_Pic
 };
 
 struct Texture {

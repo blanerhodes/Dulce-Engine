@@ -194,15 +194,25 @@ void RendererInitTextureIdTable(RendererState* renderer) {
 
 RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim dimension){
 	RendererTextureBuffer* buffer = PushStruct(arena, RendererTextureBuffer);
+
+	buffer->textures[TexID_Default].id = TexID_Default;
+	buffer->textures[TexID_Default].data = PushSize(arena, dimension*dimension*sizeof(u32));
+	RendererGenDefaultTexture(buffer->textures[TexID_Default].data, 128);
+	D3DCreateTextureResource(&buffer->textures[TexID_Default], dimension, dimension);
+
+	buffer->textures[TexID_WhiteTexture].id = TexID_WhiteTexture;
+	buffer->textures[TexID_WhiteTexture].data = PushSize(arena, dimension*dimension*sizeof(u32));
+	RendererGenWhiteTexture(buffer->textures[TexID_WhiteTexture].data, 128);
+	D3DCreateTextureResource(&buffer->textures[TexID_WhiteTexture], dimension, dimension);
+
 	i32 width = 0;
 	i32 height = 0;
 	i32 bpp;
-
 	u8* image = stbi_load("C:\\dev\\d3d_proj\\resources\\awesomeface.png", &width, &height, &bpp, 4);
-	buffer->textures[2].id = TexID_Pic;
-	buffer->textures[2].data = PushSize(arena, width*height*sizeof(u32));
-	MemCopy(image, buffer->textures[2].data, width*height*bpp);
-	D3DCreateTextureResource(&buffer->textures[2], width, height);
+	buffer->textures[TexID_Pic].id = TexID_Pic;
+	buffer->textures[TexID_Pic].data = PushSize(arena, width*height*sizeof(u32));
+	MemCopy(image, buffer->textures[TexID_Pic].data, width*height*bpp);
+	D3DCreateTextureResource(&buffer->textures[TexID_Pic], width, height);
 
 	for (u32 tex_index = 3; tex_index < ArrayCount(buffer->textures); tex_index++) {
 		buffer->textures[tex_index].id = TexID_Unset;
@@ -277,7 +287,7 @@ void RendererCommitToBuffers(RendererState* renderer, Vertex* vertices, u32 vert
 	PerObjectConstants constants = {DirectX::XMMatrixTranspose(transform), mvp};
 	u32 const_buff_offset = RendererCommitConstantVSObjectMemory(renderer, &constants);
 
-	if (mesh.texture_id != TexID_NoTexture) {
+	if (mesh.texture_id != TexID_Unset) {
 		RendererLoadTexture(renderer, mesh.texture_id);
 	}
 
