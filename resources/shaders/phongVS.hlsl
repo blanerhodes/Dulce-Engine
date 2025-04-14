@@ -9,6 +9,7 @@ struct VSOut {
     float3 world_pos : Position;
     float3 color : Color;
     float3 normal : Normal;
+    float2 tex_coord : TexCoord;
     float4 pos : SV_Position;
 };
 
@@ -23,6 +24,7 @@ VSOut main(VSIn vin) {
     vso.color = vin.color;
     vso.normal = mul(vin.normal, (float3x3)model_transform);
     vso.pos = mul(float4(vin.position, 1.0f), model_view_proj);
+    vso.tex_coord = vin.tex_coord;
     //test
     return vso;
 }

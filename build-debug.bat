@@ -52,5 +52,7 @@ REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_pixel.pdb /T ps_5_0 /Fo ./bin/d
 fxc /Od /Zi /Fd ./bin/debug/shaders/phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/phongVS.cso ./resources/shaders/phongVS.hlsl
 fxc /Od /Zi /Fd ./bin/debug/shaders/phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/phongPS.cso ./resources/shaders/phongPS.hlsl
 
+fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_phongPS.cso ./resources/shaders/textured_phongPS.hlsl
+
  
 ECHO Successfully built shaders

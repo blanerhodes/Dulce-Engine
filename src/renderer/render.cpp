@@ -208,7 +208,7 @@ RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim 
 	i32 width = 0;
 	i32 height = 0;
 	i32 bpp;
-	u8* image = stbi_load("C:\\dev\\d3d_proj\\resources\\awesomeface.png", &width, &height, &bpp, 4);
+	u8* image = stbi_load("C:\\dev\\d3d_proj\\resources\\assets\\awesomeface.png", &width, &height, &bpp, 4);
 	buffer->textures[TexID_Pic].id = TexID_Pic;
 	buffer->textures[TexID_Pic].data = PushSize(arena, width*height*sizeof(u32));
 	MemCopy(image, buffer->textures[TexID_Pic].data, width*height*bpp);
