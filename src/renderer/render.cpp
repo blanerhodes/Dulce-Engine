@@ -267,6 +267,9 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 			RendererGenGradientTexture(buffer->textures[buffer_index_result].data, buffer->dimension, COLOR_BLUE);
 			D3DCreateTextureResource(&buffer->textures[buffer_index_result], buffer->dimension);
 		} break;
+		case TexID_Pic: {
+			buffer->textures[buffer_index_result].id = TexID_Pic;
+		} break;
 		default: {INVALID_CODE_PATH;}
 	}
 	

@@ -26,7 +26,5 @@ float4 main(PSIn pin) : SV_Target {
     float3 dir_tol = v_tol / dist_tol;
     float att = 1.0f / (att_const + att_lin * dist_tol + att_quad * (dist_tol * dist_tol));
     float3 diffuse = diffuse_color * diffuse_intensity * att * max(0.0f, dot(dir_tol, pin.normal));
-    float4 color = float4(saturate((diffuse + ambient)), 1.0f); 
-    float4 tex_color = tex.Sample(splr, pin.tex_coord); 
-    return  color * tex_color; 
+    return  float4(saturate((diffuse + ambient)), 1.0f) * tex.Sample(splr, pin.tex_coord); 
 }

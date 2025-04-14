@@ -162,7 +162,7 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .scale = {20.0f, 20.0f, 1.0f},
         .rotation_angles = {90, 0, 0},
         .color = COLOR_CYANA,
-        .texture_id = TexID_Unset
+        .texture_id = TexID_Pic
     };
     RendererPushPlane(renderer_state, plane);
 
