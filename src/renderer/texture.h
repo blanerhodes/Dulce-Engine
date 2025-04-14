@@ -6,7 +6,8 @@ enum TextureID {
 	TexID_Default,
 	TexID_WhiteTexture,
 	TexID_Sky,
-	TexID_Pic
+	TexID_AwesomeFace,
+	TexID_Sunrise
 };
 
 struct Texture {

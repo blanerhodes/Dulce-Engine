@@ -163,15 +163,46 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     };
     RendererPushCylinder(renderer_state, cylinder);
 
-    BasicMesh plane = {
-        .position = {0.0f, -3.0f, 0.0f},
-        .scale = {20.0f, 20.0f, 1.0f},
+    BasicMesh floor = {
+        .position = {0.0f, 0.0f, 0.0f},
+        .scale = {5.0f, 5.0f, 1.0f},
         .rotation_angles = {90, 0, 0},
         .color = COLOR_CYANA,
-        .texture_id = TexID_Pic,
+        .texture_id = TexID_AwesomeFace,
         .lit = true
     };
-    RendererPushPlane(renderer_state, plane);
+    RendererPushPlane(renderer_state, floor);
+
+    BasicMesh wall_front = {
+        .position = {0.0f, 1.5f, 2.5f},
+        .scale = {5, 3, 1},
+        .color = COLOR_CYANA
+    };
+    RendererPushPlane(renderer_state, wall_front);
+
+    BasicMesh wall_left = {
+        .position = {-2.5f, 1.5f, 0.0f},
+        .scale = {5, 3, 1},
+        .rotation_angles = {0.0f, -90.0f, 0.0f},
+        .color = COLOR_CYANA
+    };
+    RendererPushPlane(renderer_state, wall_left);
+
+    BasicMesh wall_right = {
+        .position = {2.5f, 1.5f, 0.0f},
+        .scale = {5, 3, 1},
+        .rotation_angles = {0.0f, 90.0f, 0.0f},
+        .color = COLOR_CYANA
+    };
+    RendererPushPlane(renderer_state, wall_right);
+
+    //BasicMesh wall_back = {
+    //    .position = {0.0f, 1.5f, -2.5f},
+    //    .scale = {5, 3, 1},
+    //    .rotation_angles = {0.0f, 180.0f, 0.0f},
+    //    .color = COLOR_CYANA
+    //};
+    //RendererPushPlane(renderer_state, wall_back);
 
 
     BasicMesh suzanne = {
@@ -197,36 +228,36 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     RendererPushAsset(renderer_state, sphere);
 
 
-    BasicMesh sky_front = {
-        .position = {0.0f, 0.0f, 50.0f},
-        .scale = {150, 100, 1},
-        .texture_id = TexID_Sky
-    };
-    RendererPushPlane(renderer_state, sky_front);
+    //BasicMesh sky_front = {
+    //    .position = {0.0f, 0.0f, 50.0f},
+    //    .scale = {150, 100, 1},
+    //    .texture_id = TexID_Sky
+    //};
+    //RendererPushPlane(renderer_state, sky_front);
 
-    BasicMesh sky_left = {
-        .position = {100.0f, 0.0f, 0.0f},
-        .scale = {200, 150, 1},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_Sky
-    };
-    RendererPushPlane(renderer_state, sky_left);
+    //BasicMesh sky_left = {
+    //    .position = {100.0f, 0.0f, 0.0f},
+    //    .scale = {200, 150, 1},
+    //    .rotation_angles = {0.0f, -90.0f, 0.0f},
+    //    .texture_id = TexID_Sky
+    //};
+    //RendererPushPlane(renderer_state, sky_left);
 
-    BasicMesh sky_right = {
-        .position = {-100.0f, 0.0f, 0.0f},
-        .scale = {200, 150, 1},
-        .rotation_angles = {0.0f, 90.0f, 0.0f},
-        .texture_id = TexID_Sky
-    };
-    RendererPushPlane(renderer_state, sky_right);
+    //BasicMesh sky_right = {
+    //    .position = {-100.0f, 0.0f, 0.0f},
+    //    .scale = {200, 150, 1},
+    //    .rotation_angles = {0.0f, 90.0f, 0.0f},
+    //    .texture_id = TexID_Sky
+    //};
+    //RendererPushPlane(renderer_state, sky_right);
 
-    BasicMesh sky_back = {
-        .position = {0.0f, 0.0f, -50.0f},
-        .scale = {200, 150, 1},
-        .rotation_angles = {0.0f, 180.0f, 0.0f},
-        .texture_id = TexID_Sky
-    };
-    RendererPushPlane(renderer_state, sky_back);
+    //BasicMesh sky_back = {
+    //    .position = {0.0f, 0.0f, -50.0f},
+    //    .scale = {200, 150, 1},
+    //    .rotation_angles = {0.0f, 180.0f, 0.0f},
+    //    .texture_id = TexID_Sky
+    //};
+    //RendererPushPlane(renderer_state, sky_back);
 
     /*
 

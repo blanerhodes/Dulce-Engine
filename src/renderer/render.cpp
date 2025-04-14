@@ -189,7 +189,19 @@ void RendererInitTextureIdTable(RendererState* renderer) {
 	renderer->texture_ids[1] = { TexID_Default, ""};
 	renderer->texture_ids[2] = { TexID_WhiteTexture, "" };
 	renderer->texture_ids[3] = { TexID_Sky, ""};
-	renderer->texture_ids[4] = { TexID_Pic, ""};
+	renderer->texture_ids[4] = { TexID_AwesomeFace, ""};
+	renderer->texture_ids[5] = { TexID_Sunrise, ""};
+}
+
+void RendererStbiLoad(MemoryArena* arena, RendererTextureBuffer* buffer, TextureID id, char* filename) {
+	i32 width = 0;
+	i32 height = 0;
+	i32 bpp;
+	u8* image = stbi_load(filename, &width, &height, &bpp, 4);
+	buffer->textures[id].id = id;
+	buffer->textures[id].data = PushSize(arena, width*height*sizeof(u32));
+	MemCopy(image, buffer->textures[id].data, width*height*bpp);
+	D3DCreateTextureResource(&buffer->textures[id], width, height);
 }
 
 RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim dimension){
@@ -205,20 +217,10 @@ RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim 
 	RendererGenWhiteTexture(buffer->textures[TexID_WhiteTexture].data, dimension);
 	D3DCreateTextureResource(&buffer->textures[TexID_WhiteTexture], dimension, dimension);
 
-	i32 width = 0;
-	i32 height = 0;
-	i32 bpp;
-	u8* sky = stbi_load("C:\\dev\\d3d_proj\\resources\\assets\\sky.png", &width, &height, &bpp, 4);
-	buffer->textures[TexID_Sky].id = TexID_Sky;
-	buffer->textures[TexID_Sky].data = PushSize(arena, width*height*sizeof(u32));
-	MemCopy(sky, buffer->textures[TexID_Sky].data, width*height*bpp);
-	D3DCreateTextureResource(&buffer->textures[TexID_Sky], width, height);
+	RendererStbiLoad(arena, buffer, TexID_Sky, "C:\\dev\\d3d_proj\\resources\\assets\\sky.png");
+	RendererStbiLoad(arena, buffer, TexID_AwesomeFace, "C:\\dev\\d3d_proj\\resources\\assets\\awesomeface.png");
+	RendererStbiLoad(arena, buffer, TexID_Sunrise, "C:\\dev\\d3d_proj\\resources\\assets\\sunrise.png");
 
-	u8* image = stbi_load("C:\\dev\\d3d_proj\\resources\\assets\\awesomeface.png", &width, &height, &bpp, 4);
-	buffer->textures[TexID_Pic].id = TexID_Pic;
-	buffer->textures[TexID_Pic].data = PushSize(arena, width*height*sizeof(u32));
-	MemCopy(image, buffer->textures[TexID_Pic].data, width*height*bpp);
-	D3DCreateTextureResource(&buffer->textures[TexID_Pic], width, height);
 
 	for (u32 tex_index = 3; tex_index < ArrayCount(buffer->textures); tex_index++) {
 		buffer->textures[tex_index].id = TexID_Unset;
@@ -237,14 +239,8 @@ void RendererResetTextureBuffer(RendererTextureBuffer* texture_buffer) {
 }
 
 
-//TODO: instead of a switch have a system of looking up in a table of texture ids and their source to retrieve them
-//      if they arent present in the buffer
-// return struct of texturebuffer/index when this uses 128/512... etc buffers
 u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 	RendererTextureBuffer* buffer = renderer->texture_buffer;
-	//parse texture_id
-	//see if it's in the buffer already and if not go load it into the buffer
-	//this needs to be a hashmap probably at some point
 	for (u32 tex_index = 0; tex_index < buffer->max_texture_slots; tex_index++) {
 		if (buffer->textures[tex_index].id == texture_id) {
 			return tex_index;
@@ -273,8 +269,11 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 			//RendererGenGradientTexture(buffer->textures[buffer_index_result].data, buffer->dimension, COLOR_BLUE);
 			//D3DCreateTextureResource(&buffer->textures[buffer_index_result], buffer->dimension);
 		} break;
-		case TexID_Pic: {
-			buffer->textures[buffer_index_result].id = TexID_Pic;
+		case TexID_AwesomeFace: {
+			buffer->textures[buffer_index_result].id = TexID_AwesomeFace;
+		} break;
+		case TexID_Sunrise: {
+			buffer->textures[buffer_index_result].id = TexID_Sunrise;
 		} break;
 		default: {INVALID_CODE_PATH;}
 	}
