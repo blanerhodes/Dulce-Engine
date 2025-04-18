@@ -190,7 +190,22 @@ void RendererInitTextureIdTable(RendererState* renderer) {
 	renderer->texture_ids[2] = { TexID_WhiteTexture, "" };
 	renderer->texture_ids[3] = { TexID_Sky, ""};
 	renderer->texture_ids[4] = { TexID_AwesomeFace, ""};
-	renderer->texture_ids[5] = { TexID_Sunrise, ""};
+	renderer->texture_ids[6] = { TexID_Sunrise, ""};
+	renderer->texture_ids[7] = { TexID_MountainBackground, ""};
+	renderer->texture_ids[8] = { TexID_Library, ""};
+	renderer->texture_ids[9] = { TexID_Sunrise, ""};
+	renderer->texture_ids[10] = { TexID_Sunrise, ""};
+	renderer->texture_ids[11] = { TexID_Sunrise, ""};
+	renderer->texture_ids[12] = { TexID_Sunrise, ""};
+	renderer->texture_ids[13] = { TexID_Sunrise, ""};
+	renderer->texture_ids[14] = { TexID_Sunrise, ""};
+	renderer->texture_ids[15] = { TexID_Sunrise, ""};
+	renderer->texture_ids[16] = { TexID_Sunrise, ""};
+	renderer->texture_ids[17] = { TexID_Sunrise, ""};
+	renderer->texture_ids[18] = { TexID_Sunrise, ""};
+	renderer->texture_ids[19] = { TexID_Sunrise, ""};
+	renderer->texture_ids[20] = { TexID_Sunrise, ""};
+	renderer->texture_ids[21] = { TexID_Sunrise, ""};
 }
 
 void RendererStbiLoad(MemoryArena* arena, RendererTextureBuffer* buffer, TextureID id, char* filename) {
@@ -207,19 +222,52 @@ void RendererStbiLoad(MemoryArena* arena, RendererTextureBuffer* buffer, Texture
 RendererTextureBuffer* RendererInitTextureBuffer(MemoryArena* arena, TextureDim dimension){
 	RendererTextureBuffer* buffer = PushStruct(arena, RendererTextureBuffer);
 
-	buffer->textures[TexID_Default].id = TexID_Default;
-	buffer->textures[TexID_Default].data = PushSize(arena, dimension*dimension*sizeof(u32));
-	RendererGenDefaultTexture(buffer->textures[TexID_Default].data, 128);
-	D3DCreateTextureResource(&buffer->textures[TexID_Default], dimension, dimension);
+	//buffer->textures[TexID_Default].id = TexID_Default;
+	//buffer->textures[TexID_Default].data = PushSize(arena, dimension*dimension*sizeof(u32));
+	//RendererGenDefaultTexture(buffer->textures[TexID_Default].data, 128);
+	//D3DCreateTextureResource(&buffer->textures[TexID_Default], dimension, dimension);
 
-	buffer->textures[TexID_WhiteTexture].id = TexID_WhiteTexture;
-	buffer->textures[TexID_WhiteTexture].data = PushSize(arena, dimension*dimension*sizeof(u32));
-	RendererGenWhiteTexture(buffer->textures[TexID_WhiteTexture].data, dimension);
-	D3DCreateTextureResource(&buffer->textures[TexID_WhiteTexture], dimension, dimension);
+	//buffer->textures[TexID_WhiteTexture].id = TexID_WhiteTexture;
+	//buffer->textures[TexID_WhiteTexture].data = PushSize(arena, dimension*dimension*sizeof(u32));
+	//RendererGenWhiteTexture(buffer->textures[TexID_WhiteTexture].data, dimension);
+	//D3DCreateTextureResource(&buffer->textures[TexID_WhiteTexture], dimension, dimension);
 
-	RendererStbiLoad(arena, buffer, TexID_Sky, "C:\\dev\\d3d_proj\\resources\\assets\\sky.png");
-	RendererStbiLoad(arena, buffer, TexID_AwesomeFace, "C:\\dev\\d3d_proj\\resources\\assets\\awesomeface.png");
-	RendererStbiLoad(arena, buffer, TexID_Sunrise, "C:\\dev\\d3d_proj\\resources\\assets\\sunrise.png");
+	//RendererStbiLoad(arena, buffer, TexID_Sky, "C:\\dev\\d3d_proj\\resources\\assets\\sky.png");
+	//RendererStbiLoad(arena, buffer, TexID_AwesomeFace, "C:\\dev\\d3d_proj\\resources\\assets\\awesomeface.png");
+	//backgrounds
+	RendererStbiLoad(arena, buffer, TexID_Sunrise, "C:\\dev\\d3d_proj\\resources\\assets\\sunrise.jpg");
+	RendererStbiLoad(arena, buffer, TexID_MountainBackground, "C:\\dev\\d3d_proj\\resources\\assets\\mountain_background.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Library, "C:\\dev\\d3d_proj\\resources\\assets\\library.jpg");
+	RendererStbiLoad(arena, buffer, TexID_FlorenceNight, "C:\\dev\\d3d_proj\\resources\\assets\\florence_night.jpg");
+	//winnie
+	RendererStbiLoad(arena, buffer, TexID_Baby, "C:\\dev\\d3d_proj\\resources\\assets\\baby.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Powerlifting, "C:\\dev\\d3d_proj\\resources\\assets\\powerlifting.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Tractor, "C:\\dev\\d3d_proj\\resources\\assets\\tractor.jpg");
+	RendererStbiLoad(arena, buffer, TexID_WinnieHouse, "C:\\dev\\d3d_proj\\resources\\assets\\winnie_house.png");
+	RendererStbiLoad(arena, buffer, TexID_AshWedding, "C:\\dev\\d3d_proj\\resources\\assets\\ash_wedding.jpg");
+	RendererStbiLoad(arena, buffer, TexID_LunaTed, "C:\\dev\\d3d_proj\\resources\\assets\\luna_ted.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Honkem, "C:\\dev\\d3d_proj\\resources\\assets\\honkem.jpg");
+	//outdoors
+	RendererStbiLoad(arena, buffer, TexID_Hike, "C:\\dev\\d3d_proj\\resources\\assets\\hike.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Skydive, "C:\\dev\\d3d_proj\\resources\\assets\\skydive.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Ouray, "C:\\dev\\d3d_proj\\resources\\assets\\ouray.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Proposal, "C:\\dev\\d3d_proj\\resources\\assets\\proposal.jpg");
+	//italy
+	RendererStbiLoad(arena, buffer, TexID_Basillica, "C:\\dev\\d3d_proj\\resources\\assets\\basillica.jpg");
+	RendererStbiLoad(arena, buffer, TexID_CollosSelf, "C:\\dev\\d3d_proj\\resources\\assets\\collos_self.jpg");
+	RendererStbiLoad(arena, buffer, TexID_CollosValSelf, "C:\\dev\\d3d_proj\\resources\\assets\\collos_val_self.jpg");
+	RendererStbiLoad(arena, buffer, TexID_FlorenceSelf, "C:\\dev\\d3d_proj\\resources\\assets\\florence_self.jpg");
+	RendererStbiLoad(arena, buffer, TexID_Fountain, "C:\\dev\\d3d_proj\\resources\\assets\\fountain.jpg");
+	RendererStbiLoad(arena, buffer, TexID_LeatherSchool, "C:\\dev\\d3d_proj\\resources\\assets\\leather_school.jpg");
+	RendererStbiLoad(arena, buffer, TexID_LeatherShop, "C:\\dev\\d3d_proj\\resources\\assets\\leather_shop.jpg");
+	//books
+	RendererStbiLoad(arena, buffer, TexID_CodingBooks, "C:\\dev\\d3d_proj\\resources\\assets\\coding_books.jpg");
+	RendererStbiLoad(arena, buffer, TexID_DarkSouls, "C:\\dev\\d3d_proj\\resources\\assets\\darksouls.jpg");
+	RendererStbiLoad(arena, buffer, TexID_History, "C:\\dev\\d3d_proj\\resources\\assets\\history.png");
+	RendererStbiLoad(arena, buffer, TexID_HorrorBooks, "C:\\dev\\d3d_proj\\resources\\assets\\horror_books.jpg");
+	RendererStbiLoad(arena, buffer, TexID_LangBooks, "C:\\dev\\d3d_proj\\resources\\assets\\lang_books.jpg");
+	RendererStbiLoad(arena, buffer, TexID_NerdBooks, "C:\\dev\\d3d_proj\\resources\\assets\\nerd_books.jpg");
+	RendererStbiLoad(arena, buffer, TexID_ShowBooks, "C:\\dev\\d3d_proj\\resources\\assets\\show_books.jpg");
 
 
 	for (u32 tex_index = 3; tex_index < ArrayCount(buffer->textures); tex_index++) {
@@ -239,7 +287,7 @@ void RendererResetTextureBuffer(RendererTextureBuffer* texture_buffer) {
 }
 
 
-u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
+u32 RendererLoadTexture(RendererState* renderer, i32 texture_id) {
 	RendererTextureBuffer* buffer = renderer->texture_buffer;
 	for (u32 tex_index = 0; tex_index < buffer->max_texture_slots; tex_index++) {
 		if (buffer->textures[tex_index].id == texture_id) {
@@ -255,7 +303,8 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 		}
 	}
 	DASSERT(buffer_index_result < buffer->max_texture_slots);
-	
+	buffer->textures[buffer_index_result].id = (TextureID)texture_id;	
+	/*
 	switch (texture_id) {
 		case TexID_Default: {
 			buffer->textures[buffer_index_result].id = TexID_Default;
@@ -275,8 +324,11 @@ u32 RendererLoadTexture(RendererState* renderer, u32 texture_id) {
 		case TexID_Sunrise: {
 			buffer->textures[buffer_index_result].id = TexID_Sunrise;
 		} break;
+		case TexID_MountainBackground: {
+			buffer->textures[buffer_index_result].id = TexID_Sunrise;
+		} break;
 		default: {INVALID_CODE_PATH;}
-	}
+	}*/
 	
 	return buffer_index_result;
 }
@@ -500,6 +552,7 @@ void RendererPerFrameReset(GameState* game_state, RendererState* renderer_state,
 
     CameraUpdate(&game_state->camera, input);
 	renderer_state->view = CameraGetViewMatrix(&game_state->camera);	
+    renderer_state->ps_pfc.point_light.position = {game_state->camera.position.x, game_state->camera.position.y,game_state->camera.position.z},
 
     RendererPushClear({ 0.5f, 0.5f, 0.5f });
 }

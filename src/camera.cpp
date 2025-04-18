@@ -82,6 +82,7 @@ DINLINE void CameraUpdate(Camera* camera, GameInput* input) {
 	GameControllerInput controller = input->controllers[0];
 	f32 moved_forward = 0.0f;
 	f32 moved_right = 0.0f;
+	f32 moved_up = 0.0f;
 	if (controller.move_forward.ended_down) {
 		moved_forward += camera->speed * input->delta_time;
 	}
@@ -93,6 +94,12 @@ DINLINE void CameraUpdate(Camera* camera, GameInput* input) {
 	}
 	if (controller.move_right.ended_down) {
 		moved_right += camera->speed * input->delta_time;
+	}
+	if (controller.left_alternate.ended_down) {
+		moved_up -= camera->speed * input->delta_time;	
+	}
+	if (controller.right_alternate.ended_down) {
+		moved_up += camera->speed * input->delta_time;	
 	}
 	if (input->mouse_buttons[MouseButton_Right].ended_down) {
 		CameraAdjustPitch(camera, input->mouse_y_delta, input->delta_time);
@@ -113,6 +120,7 @@ DINLINE void CameraUpdate(Camera* camera, GameInput* input) {
 	DirectX::XMVECTOR cam_pos = DirectX::XMVectorSet(camera->position.x, camera->position.y, camera->position.z, 0.0f);
 	cam_pos += moved_right * cam_right;
 	cam_pos += moved_forward * cam_forward;
+	cam_pos += moved_up * cam_up;
 
 	cam_target = cam_pos + cam_target;
 	camera->view = DirectX::XMMatrixLookAtLH(cam_pos, cam_target, cam_up);

@@ -320,7 +320,7 @@ void D3DCreateTextureResource(Texture* texture, u32 width, u32 height) {
         .Height = height,
         .MipLevels = 1,
         .ArraySize = 1,
-        .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
         .SampleDesc = {
             .Count = 1,
             .Quality = 0,
@@ -455,12 +455,12 @@ void D3DRenderCommands(RendererState* renderer) {
 
     if (ImGui::Begin("Light Movement")) {
         PointLight* light = &renderer->ps_pfc.point_light;
-        ImGui::SliderFloat("X", &light->position.x, -60.0f, 60.0f, "%.1f");
-        ImGui::SliderFloat("Y", &light->position.y, -60.0f, 60.0f, "%.1f");
-        ImGui::SliderFloat("Z", &light->position.z, -60.0f, 60.0f, "%.1f");
+        //ImGui::SliderFloat("X", &light->position.x, -60.0f, 60.0f, "%.1f");
+        //ImGui::SliderFloat("Y", &light->position.y, -60.0f, 60.0f, "%.1f");
+        //ImGui::SliderFloat("Z", &light->position.z, -60.0f, 60.0f, "%.1f");
 
         ImGui::Text("Intensity/Color");
-        ImGui::SliderFloat("Intensity", &light->diffuse_intensity, 0.01, 2.0f, "%.1f");
+        ImGui::SliderFloat("Intensity", &light->diffuse_intensity, 0.01, 2.0f, "%.2f");
         ImGui::ColorEdit3("Diffuse Color", &light->diffuse_color.x);
         ImGui::ColorEdit3("Ambient", &light->ambient.x);
         ImGui::ColorEdit3("Material", &light->mat_color.x);

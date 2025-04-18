@@ -7,10 +7,10 @@
 #define CAMERA_DEFAULT_YAW              0.0f
 #define CAMERA_DEFAULT_PITCH            0.0f
 #define CAMERA_DEFAULT_SPEED            1.5f
-#define CAMERA_DEFAULT_ROTATION_SPEED   0.05f
+#define CAMERA_DEFAULT_ROTATION_SPEED   0.1f
 #define CAMERA_DEFAULT_ZOOM             45.0f
 #define CAMERA_DEFAULT_WORLD_UP         {0.0f, 1.0f, 0.0f}
-#define CAMERA_DEFAULT_POSITION         {0.0f, 2.0f, -5.0f}
+#define CAMERA_DEFAULT_POSITION         {0.0f, 1.25f, -2.0f}
 
 struct Camera {
 	Vec3 position;

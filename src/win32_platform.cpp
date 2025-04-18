@@ -388,7 +388,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
     ThreadContext thread = {};
 
     GameMemory game_memory = {};
-    game_memory.permanent_storage_size = MegaBytes(64);
+    game_memory.permanent_storage_size = GigaBytes(2);
     game_memory.transient_storage_size = GigaBytes(1);
     win32_state.total_size = game_memory.permanent_storage_size + game_memory.transient_storage_size;
     win32_state.game_memory_block = VirtualAlloc(base_address, win32_state.total_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
@@ -402,7 +402,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR cmd_line,
     RendererMemory renderer_memory = {};
     //NOTE: last checked the renderer wasn't even using 23Mb in total
     void* renderer_base_addr = (u8*)win32_state.game_memory_block + win32_state.total_size;
-    renderer_memory.permanent_storage_size = MegaBytes(25); 
+    renderer_memory.permanent_storage_size = GigaBytes(1); 
     renderer_memory.scratch_storage_size =  MegaBytes(5);
     u64 renderer_total_size = renderer_memory.permanent_storage_size + renderer_memory.scratch_storage_size;
     win32_state.total_size += renderer_total_size;

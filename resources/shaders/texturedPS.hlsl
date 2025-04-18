@@ -10,7 +10,12 @@ struct PixIn {
 	float4 pos : SV_POSITION;
 };
 
-float4 main(PixIn input) : SV_Target {
-    float4 result = tex.Sample(splr, input.tex_coord); 
+float4 main(PixIn pin) : SV_Target {
+    float4 result;
+    if (pin.tex_coord.y > 0.75f || pin.tex_coord.y < 0.05f || pin.tex_coord.x < 0.01f || pin.tex_coord.x > 0.99f) {
+        result = float4(0.87f, 0.87f, 0.89f, 1.0f);
+    } else {
+        result = tex.Sample(splr, pin.tex_coord); 
+    }
     return result;
 }

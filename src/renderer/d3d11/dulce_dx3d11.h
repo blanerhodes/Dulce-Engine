@@ -44,7 +44,7 @@ struct Direct3d {
     PixelShaderType bound_pixel_shader;
     
     u32 next_free_tex_slot;
-    D3DTexture2D textures_2d[16];
+    D3DTexture2D textures_2d[32];
     ID3D11SamplerState* sampler;
 
     u32 view_width;

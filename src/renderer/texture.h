@@ -7,7 +7,46 @@ enum TextureID {
 	TexID_WhiteTexture,
 	TexID_Sky,
 	TexID_AwesomeFace,
-	TexID_Sunrise
+
+	//backgrounds
+	TexID_Sunrise,
+	TexID_MountainBackground,
+	TexID_Library,
+	TexID_FlorenceNight,
+
+	//winnie/family
+	TexID_Baby,
+	TexID_Powerlifting,
+	TexID_Tractor,
+	TexID_WinnieHouse,
+	TexID_AshWedding,
+	TexID_LunaTed,
+	TexID_Honkem,
+
+	//outdoors
+	TexID_Hike,
+	TexID_Skydive,
+	TexID_Ouray,
+	TexID_Proposal,
+
+	//italy
+	TexID_Basillica,
+	TexID_CollosSelf,
+	TexID_CollosValSelf,
+	TexID_FlorenceSelf,
+	TexID_Fountain,
+	TexID_LeatherSchool,
+	TexID_LeatherShop,
+
+	//books
+	TexID_CodingBooks,
+	TexID_DarkSouls,
+	TexID_History,
+	TexID_HorrorBooks,
+	TexID_LangBooks,
+	TexID_NerdBooks,
+	TexID_ShowBooks,
+
 };
 
 struct Texture {
@@ -21,7 +60,7 @@ enum TextureDim {
 	TEXTURE_DIM_512 = 512, 
 	TEXTURE_DIM_1024 = 1024
 };
-#define MAX_TEXTURE_SLOTS 16
+#define MAX_TEXTURE_SLOTS 32
 struct RendererTextureBuffer {
 	u32 max_texture_slots;
 	TextureDim dimension;
