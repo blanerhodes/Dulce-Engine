@@ -106,25 +106,25 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     game_state->t_sin += input->delta_time;
     RendererPushClear(COLOR_GREY);
 
-    //BasicMesh cube = {
-    //    .position = {2.0f, 0.0f, 3.0f},
-    //    .scale = {0.5f, 0.5f, 0.5f},
-    //    .rotation_angles = {0, 0.0f, 45.0f},
-    //    .color = COLOR_REDA,
-    //    .texture_id = TexID_Unset,
-    //    .lit = true
-    //};
-    //RendererPushCube(renderer_state, cube);
+    BasicMesh cube = {
+        .position = {2.0f, 0.0f, 3.0f},
+        .scale = {0.5f, 0.5f, 0.5f},
+        .rotation_angles = {0, 0.0f, 45.0f},
+        .color = COLOR_REDA,
+        .texture_id = TexID_Unset,
+        .lit = true
+    };
+    RendererPushCube(renderer_state, cube);
 
-    //BasicMesh cube1 = {
-    //    .position = {-1.0f, 1.0f, 5.0f},
-    //    .scale = {1.0f, 1.0f, 1.0f},
-    //    .rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
-    //    .color = COLOR_REDA,
-    //    .texture_id = TexID_Unset, 
-    //    .lit = true
-    //};
-    //RendererPushCube(renderer_state, cube1);
+    BasicMesh cube1 = {
+        .position = {-1.0f, 1.0f, 5.0f},
+        .scale = {1.0f, 1.0f, 1.0f},
+        .rotation_angles = {game_state->t_sin, game_state->t_sin, 0},
+        .color = COLOR_REDA,
+        .texture_id = TexID_Unset, 
+        .lit = true
+    };
+    RendererPushCube(renderer_state, cube1);
 
     BasicMesh light_cube = {
         .position = {renderer_state->ps_pfc.point_light.position},
@@ -133,41 +133,40 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         .texture_id = TexID_Unset,
         .lit = true
     };
-    //RendererPushCube(renderer_state, light_cube);
     RendererPushPointLight(renderer_state);
 
-    //BasicMesh pyramid = {
-    //    .position = {2.0f, 2.0f, 2.0f},
-    //    .scale = {0.5f, 1.0f, 4.0f},
-    //    .rotation_angles = {0, game_state->t_sin, game_state->t_sin},
-    //    //.rotation_angles = {0, 0, 0},
-    //    .color = COLOR_BLUEA,
-    //    .texture_id = TexID_Unset,
-    //    .lit = true
-    //};
-    //RendererPushPyramid(renderer_state, pyramid);
+    BasicMesh pyramid = {
+        .position = {2.0f, 2.0f, 2.0f},
+        .scale = {0.5f, 1.0f, 4.0f},
+        .rotation_angles = {0, game_state->t_sin, game_state->t_sin},
+        //.rotation_angles = {0, 0, 0},
+        .color = COLOR_BLUEA,
+        .texture_id = TexID_Unset,
+        .lit = true
+    };
+    RendererPushPyramid(renderer_state, pyramid);
 
-    //BasicMesh cone = {
-    //    .position = {-2.0f, 2.0f, 2.0f},
-    //    .scale = {0.5f, 1.0f, 50.0f},
-    //    .rotation_angles = {0, game_state->t_sin* 20, game_state->t_sin * 20},
-    //    //.rotation_angles = {0, 0, 0},
-    //    .color = COLOR_GREENA,
-    //    .texture_id = TexID_Unset,
-    //    .lit = true
-    //};
-    //RendererPushCone(renderer_state, cone);
+    BasicMesh cone = {
+        .position = {-2.0f, 2.0f, 2.0f},
+        .scale = {0.5f, 1.0f, 50.0f},
+        .rotation_angles = {0, game_state->t_sin* 20, game_state->t_sin * 20},
+        //.rotation_angles = {0, 0, 0},
+        .color = COLOR_GREENA,
+        .texture_id = TexID_Unset,
+        .lit = true
+    };
+    RendererPushCone(renderer_state, cone);
 
-    //BasicMesh cylinder = {
-    //    .position = {-5.0f, 2.0f, 2.0f},
-    //    .scale = {0.5f, 1.0f, 50.0f},
-    //    .rotation_angles = {0, game_state->t_sin, game_state->t_sin},
-    //    //.rotation_angles = {0, 0, 0},
-    //    .color = COLOR_MAGENTAA,
-    //    .texture_id = TexID_Unset,
-    //    .lit = true
-    //};
-    //RendererPushCylinder(renderer_state, cylinder);
+    BasicMesh cylinder = {
+        .position = {-5.0f, 2.0f, 2.0f},
+        .scale = {0.5f, 1.0f, 50.0f},
+        .rotation_angles = {0, game_state->t_sin, game_state->t_sin},
+        //.rotation_angles = {0, 0, 0},
+        .color = COLOR_MAGENTAA,
+        .texture_id = TexID_Unset,
+        .lit = true
+    };
+    RendererPushCylinder(renderer_state, cylinder);
 
     BasicMesh floor = {
         .position = {0.0f, 0.0f, 0.0f},
@@ -179,322 +178,29 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     };
     RendererPushPlane(renderer_state, floor);
 
-    f32 wall_height = 0.75f;
-    f32 xscale = 0.55;
-
-    //front wall objects
-    BasicMesh wall_front = {
-        .position = {0.0f, wall_height, 2.5f},
-        .scale = {5, 3, 1},
-        .texture_id = TexID_Sunrise
-    };
-    RendererPushPlane(renderer_state, wall_front);
-
-    BasicMesh baby = {
-        .position = {2.0f, 1.8f, 2.49f},
-        .scale = {0.5f, 0.6f, 1.0f},
-        .texture_id = TexID_Baby,
+    BasicMesh suzanne = {
+        .position = {-3.0f, 2.0f, 4.0f},
+        .scale = {1, 1, 1},
+        //.rotation_angles = {0, game_state->t_sin * 20.0f, game_state->t_sin * 20.0f},
+        .color = COLOR_WHITEA,
+        .texture_id = TexID_Unset,
+        .asset_id = {.name = "suzanna"},
         .lit = true
     };
-    RendererPushPlane(renderer_state, baby);
+    RendererPushAsset(renderer_state, suzanne);
 
-    BasicMesh powerlifting = {
-        .position = {1.2f, 1.55f, 2.49f},
-        .scale = {xscale, 0.0f, 1.0f},
-        .texture_id = TexID_Powerlifting,
+    BasicMesh sphere = {
+        .position = {4.0f, 2.0f, 4.0f},
+        .scale = {1, 1, 1},
+        .rotation_angles = {0, game_state->t_sin * 20.0f, game_state->t_sin * 20.0f},
+        .color = COLOR_WHITEA,
+        .texture_id = TexID_Unset,
+        .asset_id = {.name = "sphere"},
         .lit = true
     };
-    FixY(&powerlifting);
-    RendererPushPlane(renderer_state, powerlifting);
-
-    BasicMesh tractor = {
-        .position = {1.4f, 0.5f, 2.49f},
-        .scale = {xscale, 0.0f, 1.0f},
-        .texture_id = TexID_Tractor, 
-        .lit = true
-    };
-    FixY(&tractor);
-    RendererPushPlane(renderer_state, tractor);
-
-    BasicMesh winnie_house = {
-        .position = {0.0f, 1.5f, 2.49f},
-        .scale = {1.25f, 0.7f, 1.0f},
-        .texture_id = TexID_WinnieHouse,
-        .lit = true
-    };
-    RendererPushPlane(renderer_state, winnie_house);
-
-    BasicMesh ash_wedding = {
-        .position = {-1.3f, 1.3f, 2.49f},
-        .scale = {xscale, 0.9f, 1.0f},
-        .texture_id = TexID_AshWedding,
-        .lit = true
-    };
-    FixY(&ash_wedding);
-    RendererPushPlane(renderer_state, ash_wedding);
-
-    BasicMesh luna_ted = {
-        .position = {-2.0f, 1.75f, 2.49f},
-        .scale = {0.7f, 0.5f, 1.0f},
-        .rotation_angles = {0.0f, 0.0f, -90.0f},
-        .texture_id = TexID_LunaTed,
-        .lit = true
-    };
-    RendererPushPlane(renderer_state, luna_ted);
-
-    BasicMesh honkem = {
-        .position = {-0.9f, 0.45f, 2.49f},
-        .scale = {xscale, 0.9f, 1.0f},
-        .texture_id = TexID_Honkem,
-        .lit = true
-    };
-    FixY(&honkem);
-    RendererPushPlane(renderer_state, honkem);
-
-
-    //outdoors
-    BasicMesh wall_left = {
-        .position = {-2.5f, wall_height, 0.0f},
-        .scale = {5, 3, 1},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_MountainBackground,
-    };
-    RendererPushPlane(renderer_state, wall_left);
-
-    BasicMesh hike = {
-        .position = {-2.49f, 0.5f, 2.0f},
-        .scale = {0.7f, 0.55f, 1.0f},
-        .rotation_angles = {0.0f, 90.0f, -90.0f},
-        .texture_id = TexID_Hike,
-    };
-    RendererPushPlane(renderer_state, hike);
-
-    BasicMesh skydive = {
-        .position = {-2.49f, 1.45f, 1.0f},
-        .scale = {0.7f, 0.5f, 1.0f},
-        .rotation_angles = {0.0f, 90.0f, 0.0f},
-        .texture_id = TexID_Skydive,
-    };
-    RendererPushPlane(renderer_state, skydive);
-
-    BasicMesh ouray = {
-        .position = {-2.49f, 1.5f, -1.4f},
-        .scale = {1.0f, 0.8f, 1.0f},
-        .rotation_angles = {0.0f, 90.0f, 0.0f},
-        .texture_id = TexID_Ouray,
-    };
-    RendererPushPlane(renderer_state, ouray);
-
-    BasicMesh proposal = {
-        .position = {-2.49f, 0.45f, -2.0f},
-        .scale = {xscale, 0.9f, 1.0f},
-        .rotation_angles = {0.0f, 90.0f, 0.0f},
-        .texture_id = TexID_Proposal,
-    };
-    FixY(&proposal);
-    RendererPushPlane(renderer_state, proposal);
-
-    //books
-    BasicMesh wall_right = {
-        .position = {2.5f, wall_height, 0.0f},
-        .scale = {5, 3, 1},
-        .rotation_angles = {0.0f, 90.0f, 0.0f},
-        .texture_id = TexID_Library
-    };
-    RendererPushPlane(renderer_state, wall_right);
-
-    BasicMesh coding_books = {
-        .position = {2.49f, 0.5f, 1.75f},
-        .scale = {1.0f, 0.7f, 1.0f},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_CodingBooks,
-    };
-    RendererPushPlane(renderer_state, coding_books);
-
-    BasicMesh horror_books = {
-        .position = {2.49f, 1.5f, 1.5f},
-        .scale = {1.0f, 0.7f, 1.0f},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_HorrorBooks,
-    };
-    RendererPushPlane(renderer_state, horror_books);
-
-    BasicMesh lang_books = {
-        .position = {2.49f, 1.75f, 0.25f},
-        .scale = {1.0f, 0.7f, 1.0f},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_LangBooks,
-    };
-    RendererPushPlane(renderer_state, lang_books);
-
-    BasicMesh nerd_books = {
-        .position = {2.49f, 1.75f, -1.0f},
-        .scale = {1.0f, 0.7f, 1.0f},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_NerdBooks,
-    };
-    RendererPushPlane(renderer_state, nerd_books);
-
-    BasicMesh show_books = {
-        .position = {2.49f, 0.9f, 0.0f},
-        .scale = {0.7f, 0.5f, 1.0f},
-        .rotation_angles = {0.0f, -90.0f, -90.0f},
-        .texture_id = TexID_ShowBooks,
-    };
-    RendererPushPlane(renderer_state, show_books);
-
-    BasicMesh history = {
-        .position = {2.49f, 1.0f, -2.0f},
-        .scale = {0.5f, 1.0f, 1.0f},
-        .rotation_angles = {0.0f, 270.0f, 0.0f},
-        .texture_id = TexID_History,
-        .lit = true
-    };
-    //RendererPushPlane(renderer_state, history);
-
-    BasicMesh darksouls = {
-        .position = {2.49f, 0.65f, -1.2f},
-        .scale = {1.0f, 0.7f, 1.0f},
-        .rotation_angles = {0.0f, -90.0f, 0.0f},
-        .texture_id = TexID_DarkSouls,
-    };
-    RendererPushPlane(renderer_state, darksouls);
-
-    BasicMesh wall_back = {
-        .position = {-0.75f, wall_height, -2.5f},
-        .scale = {3, 7, 1},
-        .rotation_angles = {0.0f, 0.0f, -90.0f},
-        .texture_id = TexID_FlorenceNight
-    };
-    RendererPushPlane(renderer_state, wall_back);
-
-    BasicMesh basillica = {
-        .position = {-1.25f, 1.75f, -2.49f},
-        .scale = {0.9f, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, -90.0f},
-        .texture_id = TexID_Basillica,
-        .lit = true
-    };
-    //FixY(&basillica);
-    RendererPushPlane(renderer_state, basillica);
-
-    BasicMesh collos_self = {
-        .position = {-0.5f, 1.0f, -2.49f},
-        .scale = {0.7f, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, 0.0f},
-        .texture_id = TexID_CollosSelf,
-        .lit = true
-    };
-    //FixY(&basillica);
-    RendererPushPlane(renderer_state, collos_self);
-
-    BasicMesh collos_self_val = {
-        .position = {0.5f, 1.75f, -2.49f},
-        .scale = {0.7f, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, -90.0f},
-        .texture_id = TexID_CollosValSelf,
-        .lit = true
-    };
-    //FixY(&basillica);
-    RendererPushPlane(renderer_state, collos_self_val);
-
-    BasicMesh florence_self = {
-        .position = {1.25f, 1.8f, -2.49f},
-        .scale = {xscale, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, 0.0f},
-        .texture_id = TexID_FlorenceSelf,
-        .lit = true
-    };
-    FixY(&florence_self);
-    RendererPushPlane(renderer_state, florence_self);
-
-    BasicMesh fountain = {
-        .position = {2.0f, 1.2f, -2.49f},
-        .scale = {xscale, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, 0.0f},
-        .texture_id = TexID_Fountain,
-        .lit = true
-    };
-    FixY(&fountain);
-    RendererPushPlane(renderer_state, fountain);
-
-    BasicMesh leather_school = {
-        .position = {-0.5f, 1.8f, -2.49f},
-        .scale = {0.7, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, -90.0f},
-        .texture_id = TexID_LeatherSchool,
-        .lit = true
-    };
-    //FixY(&leather_school);
-    RendererPushPlane(renderer_state, leather_school);
-
-    BasicMesh leather_shop = {
-        .position = {-2.0f, 1.25f, -2.49f},
-        .scale = {xscale, 0.66f, 1.0f},
-        .rotation_angles = {0.0f, 180.0f, 0.0f},
-        .texture_id = TexID_LeatherShop,
-        .lit = true
-    };
-    FixY(&leather_shop);
-    RendererPushPlane(renderer_state, leather_shop);
-
-    //BasicMesh suzanne = {
-    //    .position = {-3.0f, 2.0f, 4.0f},
-    //    .scale = {1, 1, 1},
-    //    //.rotation_angles = {0, game_state->t_sin * 20.0f, game_state->t_sin * 20.0f},
-    //    .color = COLOR_WHITEA,
-    //    .texture_id = TexID_Unset,
-    //    .asset_id = {.name = "suzanna"},
-    //    .lit = true
-    //};
-    //RendererPushAsset(renderer_state, suzanne);
-
-    //BasicMesh sphere = {
-    //    .position = {4.0f, 2.0f, 4.0f},
-    //    .scale = {1, 1, 1},
-    //    .rotation_angles = {0, game_state->t_sin * 20.0f, game_state->t_sin * 20.0f},
-    //    .color = COLOR_WHITEA,
-    //    .texture_id = TexID_Unset,
-    //    .asset_id = {.name = "sphere"},
-    //    .lit = true
-    //};
-    //RendererPushAsset(renderer_state, sphere);
-
-
-    //BasicMesh sky_front = {
-    //    .position = {0.0f, 0.0f, 50.0f},
-    //    .scale = {150, 100, 1},
-    //    .texture_id = TexID_Sky
-    //};
-    //RendererPushPlane(renderer_state, sky_front);
-
-    //BasicMesh sky_left = {
-    //    .position = {100.0f, 0.0f, 0.0f},
-    //    .scale = {200, 150, 1},
-    //    .rotation_angles = {0.0f, -90.0f, 0.0f},
-    //    .texture_id = TexID_Sky
-    //};
-    //RendererPushPlane(renderer_state, sky_left);
-
-    //BasicMesh sky_right = {
-    //    .position = {-100.0f, 0.0f, 0.0f},
-    //    .scale = {200, 150, 1},
-    //    .rotation_angles = {0.0f, 90.0f, 0.0f},
-    //    .texture_id = TexID_Sky
-    //};
-    //RendererPushPlane(renderer_state, sky_right);
-
-    //BasicMesh sky_back = {
-    //    .position = {0.0f, 0.0f, -50.0f},
-    //    .scale = {200, 150, 1},
-    //    .rotation_angles = {0.0f, 180.0f, 0.0f},
-    //    .texture_id = TexID_Sky
-    //};
-    //RendererPushPlane(renderer_state, sky_back);
+    RendererPushAsset(renderer_state, sphere);
 
     /*
-
-
     //BasicMesh grid = {
     //    .position = {0.0f, 0.0f, 0.0f},
     //    .scale = {1.0f, 1.0f, 1.0f},
@@ -503,7 +209,6 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
     //    .texture_id = TexID_NoTexture
     //};
     //RendererPushGrid(renderer_state, 6, 6, 3, 3, grid);
-
     */
     
     return renderer_state;
