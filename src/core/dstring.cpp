@@ -2,7 +2,6 @@
 #include "defines.h"
 #include "logger.h"
 
-
 u32 StringLength(u8* str) {
     u32 result = 0;
 
@@ -81,4 +80,15 @@ inline void StringCopy(u8* src, u8* dest) {
         dest++;
     }
 }
-//TODO: make string compare that takes lengths
+
+bool IsDigit(char c) {
+    return '0' <= c && c <= '9';
+}
+
+bool IsAlpha(char c) {
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_';
+}
+
+bool IsAlNum(char c) {
+    return IsDigit(c) || IsAlpha(c);
+}

@@ -221,6 +221,7 @@ struct RendererState {
 	DirectX::XMMATRIX projection;
 };
 
+introspect()
 struct BasicMesh {
 	Vec3 position;
 	Vec3 scale;

@@ -18,3 +18,6 @@ b32 IsEndOfLine(char c);
 b32 IsWhiteSpace(char c);
 u32 StringCopyToWS(u8* src, u8* dest, b32 include_ws = false);
 void StringCopy(u8* src, u8* dest);
+bool IsDigit(char c);
+bool IsAlpha(char c);
+bool IsAlNum(char c);

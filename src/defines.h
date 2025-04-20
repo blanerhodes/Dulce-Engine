@@ -73,6 +73,8 @@ typedef uint8_t b8;
 #define DCLAMP_MIN(value, min) (value < min) ? min : value;
 
 #define DINLINE
+
+#define introspect()
 //#ifdef _MSC_VER
 //    #define DINLINE __forceinline
 //    #define DNOINLINE __declspec(noinline)

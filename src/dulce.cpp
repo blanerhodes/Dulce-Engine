@@ -63,15 +63,14 @@ static RendererState* GameUpdateAndRender(ThreadContext* context, GameMemory* ga
         renderer_state->projection = DirectX::XMMatrixPerspectiveFovLH(45.0f, 1.0f / g_d3d.aspect_ratio, 0.1f, 1000.0f);
 
         renderer_state->ps_pfc.point_light = {
-            //.position = {0.0f, 4.0f, 0.0f},
-            .position = {game_state->camera.position.x, game_state->camera.position.y,game_state->camera.position.z},
+            .position = {0.0f, 4.0f, 0.0f},
             .mat_color = {0.7f, 0.7f, 0.9f},
             .ambient = {0.05f, 0.05f, 0.05f},
             .diffuse_color = {1.0f, 1.0f, 1.0f},
-            .diffuse_intensity = 0.1f,
-            .att_const = 0.05f,
-            .att_lin = 0.001f,
-            .att_quad = 0.06f
+            .diffuse_intensity = 1.0f,
+            .att_const = 1.0f,
+            .att_lin = 0.045f,
+            .att_quad = 0.0075f
         };
 
         renderer_memory->is_initialized = true;

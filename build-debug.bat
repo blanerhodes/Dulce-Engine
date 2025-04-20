@@ -12,11 +12,17 @@ SET includeFlags=-Isrc -Isrc/core -Isrc/math -I"C:/Program Files (x86)/Windows K
 SET linkerFlags=-lmsvcrtd -L"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64" -luser32 -lgdi32 -ld3d11 -ldxgi -ldxguid -lwinmm -ld3dcompiler
 SET defines=-D_DEBUG -DDEXPORT -D_CRT_SECURE_NO_WARNINGS
 
-ECHO "Building debug %assembly%..."
-
+ECHO Building preprocessor...
 clang++ -std=c++20 %cFilenames% %compilerFlags% -o ./bin/debug/%assembly%.exe %defines% %includeFlags% %linkerFlags% 
+IF %ERRORLEVEL% NEQ 0 (ECHO Error:%ERRORLEVEL% && exit)
+ECHO Preprocessor build complete
+ECHO:
 
-ECHO Successfully built debug %assembly%
+ECHO Building assembly...
+clang++ -std=c++20 ./src/generate/preprocessor.cpp %compilerFlags% -o ./bin/debug/meta/preprocessor.exe %defines% %includeFlags% %linkerFlags% 
+IF %ERRORLEVEL% NEQ 0 (ECHO Error:%ERRORLEVEL% && exit)
+ECHO Assembly build complete
+ECHO:
 
 ECHO Building shaders...
 
@@ -49,15 +55,17 @@ REM )
 REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_vertex.pdb /T vs_5_0 /Fo ./bin/debug/shaders/textured_vertex.cso ./resources/shaders/textured_vertex.hlsl
 REM fxc /Od /Zi /Fd ./bin/debug/shaders/textured_pixel.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_pixel.cso ./resources/shaders/textured_pixel.hlsl
 
-fxc /Od /Zi /Fd ./bin/debug/shaders/phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/phongVS.cso ./resources/shaders/phongVS.hlsl
-fxc /Od /Zi /Fd ./bin/debug/shaders/phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/phongPS.cso ./resources/shaders/phongPS.hlsl
+fxc /Od /Zi /Fd ./bin/debug/shaders/phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/phongVS.cso ./resources/shaders/phongVS.hlsl 1>nul
+fxc /Od /Zi /Fd ./bin/debug/shaders/phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/phongPS.cso ./resources/shaders/phongPS.hlsl 1>nul
+IF %ERRORLEVEL% NEQ 0 (ECHO Error:%ERRORLEVEL% && exit)
 
-fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/textured_phongVS.cso ./resources/shaders/textured_phongVS.hlsl
-fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_phongPS.cso ./resources/shaders/textured_phongPS.hlsl
+fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/textured_phongVS.cso ./resources/shaders/textured_phongVS.hlsl 1>nul
+fxc /Od /Zi /Fd ./bin/debug/shaders/textured_phongPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/textured_phongPS.cso ./resources/shaders/textured_phongPS.hlsl 1>nul
+IF %ERRORLEVEL% NEQ 0 (ECHO Error:%ERRORLEVEL% && exit)
 
-fxc /Od /Zi /Fd ./bin/debug/shaders/texturedVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/texturedVS.cso ./resources/shaders/texturedVS.hlsl
-fxc /Od /Zi /Fd ./bin/debug/shaders/texturedPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/texturedPS.cso ./resources/shaders/texturedPS.hlsl
-fxc /Od /Zi /Fd ./bin/debug/shaders/untexturedPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/untexturedPS.cso ./resources/shaders/untexturedPS.hlsl
-
+fxc /Od /Zi /Fd ./bin/debug/shaders/texturedVS.pdb /T vs_5_0 /Fo ./bin/debug/shaders/texturedVS.cso ./resources/shaders/texturedVS.hlsl 1>nul
+fxc /Od /Zi /Fd ./bin/debug/shaders/texturedPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/texturedPS.cso ./resources/shaders/texturedPS.hlsl 1>nul
+fxc /Od /Zi /Fd ./bin/debug/shaders/untexturedPS.pdb /T ps_5_0 /Fo ./bin/debug/shaders/untexturedPS.cso ./resources/shaders/untexturedPS.hlsl 1>nul
+IF %ERRORLEVEL% NEQ 0 (ECHO Error:%ERRORLEVEL% && exit)
  
 ECHO Successfully built shaders
